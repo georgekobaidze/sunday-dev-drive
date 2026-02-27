@@ -490,6 +490,24 @@ renderer.domElement.addEventListener('wheel', e => {
   orbit.radius = Math.max(4, Math.min(30, orbit.radius + e.deltaY * 0.02));
 });
 
+// Billboard click — raycast against panels, open article URL
+const _bbRaycaster = new THREE.Raycaster();
+renderer.domElement.addEventListener('click', e => {
+  if (orbit.active) return; // ignore if was dragging
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((e.clientX - rect.left) / rect.width)  *  2 - 1,
+    ((e.clientY - rect.top)  / rect.height) * -2 + 1
+  );
+  _bbRaycaster.setFromCamera(mouse, camera);
+  const panels = billboardPool.map(bb => bb.mesh.userData.panel).filter(Boolean);
+  const hits = _bbRaycaster.intersectObjects(panels);
+  if (hits.length > 0) {
+    const url = hits[0].object.userData.articleUrl;
+    if (url) window.open(url, '_blank');
+  }
+});
+
 function updateCamHUD() {
   const labels = { chase: '🎥 Chase', interior: '🪟 Interior', side: '↔ Side', orbit: '🔄 Orbit' };
   camHUD.textContent = labels[camState.mode] + '  [C/Y] cycle  [RMB] orbit  [V/R3] look back';
@@ -725,6 +743,482 @@ function animate() {
     camera.lookAt(lookTarget);
   }
 
+  // Recycle billboard pool
+  if (devArticles.length) {
+    for (const bb of billboardPool) {
+      const pd  = pathData[bb.pathIdx];
+      const dx  = car.position.x - pd.pos.x;
+      const dz  = car.position.z - pd.pos.z;
+      const fwd = Math.sin(pd.angle) * dx - Math.cos(pd.angle) * dz;
+      if (fwd > SEGMENT_LEN * 20) {
+        const maxIdx = Math.max(...billboardPool.map(b => b.pathIdx));
+        bb.pathIdx = maxIdx + BILLBOARD_SPACING;
+        if (bb.pathIdx >= pathData.length) growPath(bb.pathIdx + 4 - pathData.length);
+        placeBillboard(bb, pathData[bb.pathIdx], bb.side);
+        assignBillboardArticle(bb);
+      }
+    }
+  }
+
   renderer.render(scene, camera);
 }
+// ─── DEV.to API + Billboard System ───────────────────────────────────────────
+
+let devArticles = [];       // fetched articles with snippets
+let billboardPool = [];     // { mesh, postMesh, pathIdx, type }
+const BILLBOARD_SPACING = 8;
+const NUM_BILLBOARDS   = 14;
+const ROAD_SIDE_OFFSET = ROAD_WIDTH / 2 + 9;
+const OVERHEAD_EVERY   = 4; // every Nth billboard is overhead
+
+// Extract text snippets from markdown body — strip markdown, split to paragraphs
+function extractSnippets(markdown = '') {
+  const clean = markdown
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/!\[.*?\]\(.*?\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/#{1,6}\s+/g, '')
+    .replace(/[*_`~>]/g, '')
+    .trim();
+  return clean.split(/\n{2,}/)
+    .map(p => p.replace(/\n/g, ' ').trim())
+    .filter(p => p.length > 60 && p.length < 400);
+}
+
+// Draw billboard texture onto a 512×768 canvas
+function createBillboardTexture(article, snippet) {
+  const W = 512, H = 768;
+  const PAD = 16;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Fixed section positions
+  const SEC = {
+    header:  { y: 0,   h: 78  },  // profile pic + username
+    title:   { y: 78,  h: 100 },  // article title
+    cover:   { y: 178, h: 210 },  // cover image (letterboxed)
+    snippet: { y: 396, h: 270 },  // article text
+    footer:  { y: 674, h: 94  },  // reactions + reading time
+  };
+
+  // ── Background ───────────────────────────────────────────────────────────
+  ctx.fillStyle = '#00060f';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Neon border ───────────────────────────────────────────────────────────
+  ctx.strokeStyle = '#00aaff';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(3, 3, W - 6, H - 6);
+
+  // ── Section dividers ─────────────────────────────────────────────────────
+  for (const sec of [SEC.title, SEC.cover, SEC.snippet, SEC.footer]) {
+    ctx.fillStyle = '#00aaff22';
+    ctx.fillRect(0, sec.y, W, 1);
+  }
+
+  // ── HEADER: profile pic + username ───────────────────────────────────────
+  const PFP = 52, pfpX = PAD, pfpY = (SEC.header.h - PFP) / 2;
+  // Placeholder circle
+  ctx.fillStyle = '#000c18';
+  ctx.beginPath();
+  ctx.arc(pfpX + PFP / 2, pfpY + PFP / 2, PFP / 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#00aaff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Username
+  ctx.fillStyle = '#00aaff';
+  ctx.font = 'bold 22px Courier New, monospace';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('@' + (article.user?.username || 'unknown'), pfpX + PFP + 10, pfpY + PFP / 2 - 8);
+  // Tags
+  const tags = (article.tag_list || []).slice(0, 3).map(t => '#' + t).join('  ');
+  ctx.fillStyle = '#ff2d78';
+  ctx.font = '18px Courier New, monospace';
+  ctx.fillText(tags, pfpX + PFP + 10, pfpY + PFP / 2 + 14);
+
+  // ── TITLE ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 32px Courier New, monospace';
+  ctx.textBaseline = 'top';
+  const titleWords = (article.title || '').split(' ');
+  let tLine = '', tLines = [];
+  for (const w of titleWords) {
+    const test = tLine ? tLine + ' ' + w : w;
+    if (ctx.measureText(test).width > W - PAD * 2) { tLines.push(tLine); tLine = w; }
+    else tLine = test;
+  }
+  if (tLine) tLines.push(tLine);
+  tLines.slice(0, 3).forEach((l, i) => ctx.fillText(l, PAD, SEC.title.y + 10 + i * 30));
+
+  // ── COVER IMAGE (letterboxed) ─────────────────────────────────────────────
+  const cx = PAD, cy = SEC.cover.y + 4, cw = W - PAD * 2, ch = SEC.cover.h - 8;
+  ctx.fillStyle = '#000a14';
+  ctx.fillRect(cx, cy, cw, ch);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  const drawImageLetterbox = (img, x, y, maxW, maxH) => {
+    const ar = img.width / img.height;
+    let dw = maxW, dh = maxW / ar;
+    if (dh > maxH) { dh = maxH; dw = maxH * ar; }
+    const ox = x + (maxW - dw) / 2;
+    const oy = y + (maxH - dh) / 2;
+    ctx.drawImage(img, ox, oy, dw, dh);
+  };
+
+  if (article.cover_image) {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { drawImageLetterbox(img, cx, cy, cw, ch); tex.needsUpdate = true; };
+    img.onerror = () => {};
+    img.src = article.cover_image;
+  } else {
+    // No cover: show tag pills as colour blocks
+    ctx.fillStyle = '#000c18';
+    ctx.fillRect(cx, cy, cw, ch);
+    ctx.fillStyle = '#00aaff44';
+    ctx.font = 'bold 28px Courier New';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(article.title?.slice(0, 30) || '', cx + cw / 2, cy + ch / 2);
+    ctx.textAlign = 'left';
+  }
+
+  // ── SNIPPET TEXT ──────────────────────────────────────────────────────────
+  ctx.fillStyle = '#bf80ff';
+  ctx.font = '21px Courier New, monospace';
+  ctx.textBaseline = 'top';
+  const quotedSnippet = '\u201C' + (snippet || '') + '\u201D';
+  const snipWords = quotedSnippet.split(' ');
+  let sLine = '', sLines = [];
+  for (const w of snipWords) {
+    const test = sLine ? sLine + ' ' + w : w;
+    if (ctx.measureText(test).width > W - PAD * 2) { sLines.push(sLine); sLine = w; }
+    else sLine = test;
+  }
+  if (sLine) sLines.push(sLine);
+  sLines.slice(0, 9).forEach((l, i) => ctx.fillText(l, PAD, SEC.snippet.y + 10 + i * 26));
+
+  // ── FOOTER ────────────────────────────────────────────────────────────────
+  ctx.fillStyle = '#000a14';
+  ctx.fillRect(0, SEC.footer.y, W, SEC.footer.h);
+  ctx.fillStyle = '#ff2d78';
+  ctx.font = 'bold 28px Courier New, monospace';
+  ctx.textBaseline = 'top';
+  ctx.fillText(`♥ ${article.public_reactions_count ?? 0}`, PAD, SEC.footer.y + 14);
+  ctx.fillStyle = '#00ffe1';
+  ctx.font = '22px Courier New, monospace';
+  ctx.fillText(`⏱ ${article.reading_time_minutes ?? '?'} min read`, PAD + 120, SEC.footer.y + 18);
+
+  // ── PROFILE PICTURE (async, drawn over placeholder) ───────────────────────
+  const pfpSrc = article.user?.profile_image_90 || article.user?.profile_image;
+  if (pfpSrc) {
+    const pfp = new window.Image();
+    pfp.crossOrigin = 'anonymous';
+    pfp.onload = () => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pfpX + PFP / 2, pfpY + PFP / 2, PFP / 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(pfp, pfpX, pfpY, PFP, PFP);
+      ctx.restore();
+      tex.needsUpdate = true;
+    };
+    pfp.onerror = () => {};
+    pfp.src = pfpSrc;
+  }
+
+  return tex;
+}
+
+// Landscape texture for overhead (1024×512, 2:1) ─────────────────────────────
+function createOverheadBillboardTexture(article, snippet) {
+  const W = 1024, H = 512;
+  const PAD = 16;
+  const FOOTER_H = 72, FOOTER_Y = H - FOOTER_H; // 440
+  // Cover: top-right corner, takes 65% width, fixed slot height ~62% of content
+  const COVER_X = 360, COVER_SLOT_H = 272;
+  const COVER_W = W - COVER_X; // 664px
+  // Below-cover strip: full width, from COVER_SLOT_H to FOOTER_Y
+  const BELOW_Y = COVER_SLOT_H + PAD;
+  const BELOW_H = FOOTER_Y - BELOW_Y; // ~152px
+  // Left column text: full height
+  const LEFT_W = COVER_X - PAD * 2; // ~328px
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#00060f';
+  ctx.fillRect(0, 0, W, H);
+
+  // Border
+  ctx.strokeStyle = '#00aaff';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(3, 3, W - 6, H - 6);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  // ── COVER IMAGE (top-right corner, aspect-correct) ────────────────────────
+  ctx.fillStyle = '#000a14';
+  ctx.fillRect(COVER_X, 0, COVER_W, COVER_SLOT_H);
+  if (article.cover_image) {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const ar = img.width / img.height;
+      let dw = COVER_W, dh = COVER_W / ar;
+      if (dh > COVER_SLOT_H) { dh = COVER_SLOT_H; dw = COVER_SLOT_H * ar; }
+      // pin to top-right corner
+      ctx.drawImage(img, COVER_X + COVER_W - dw, 0, dw, dh);
+      tex.needsUpdate = true;
+    };
+    img.onerror = () => {};
+    img.src = article.cover_image;
+  }
+
+  // ── TITLE (top-left, next to cover) ──────────────────────────────────────
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 32px Courier New, monospace';
+  ctx.textBaseline = 'top';
+  const tWords = (article.title || '').split(' ');
+  let tLine = '', tLines = [];
+  for (const w of tWords) {
+    const test = tLine ? tLine + ' ' + w : w;
+    if (ctx.measureText(test).width > LEFT_W) { tLines.push(tLine); tLine = w; }
+    else tLine = test;
+  }
+  if (tLine) tLines.push(tLine);
+  tLines.slice(0, 5).forEach((l, i) => ctx.fillText(l, PAD, PAD + i * 42));
+
+  // ── SNIPPET — full width below cover image ────────────────────────────────
+  ctx.fillStyle = '#bf80ff';
+  ctx.font = '21px Courier New, monospace';
+  const quotedSnip = '\u201C' + (snippet || '') + '\u201D';
+  const sWords = quotedSnip.split(' ');
+  let sLine = '', sLines = [];
+  const fullW = W - PAD * 2;
+  for (const w of sWords) {
+    const test = sLine ? sLine + ' ' + w : w;
+    if (ctx.measureText(test).width > fullW) { sLines.push(sLine); sLine = w; }
+    else sLine = test;
+  }
+  if (sLine) sLines.push(sLine);
+  const maxBelow = Math.floor(BELOW_H / 28);
+  sLines.slice(0, maxBelow).forEach((l, i) => ctx.fillText(l, PAD, BELOW_Y + i * 28));
+
+  // ── FOOTER (full width) ───────────────────────────────────────────────────
+  ctx.fillStyle = '#000a14';
+  ctx.fillRect(0, FOOTER_Y, W, FOOTER_H);
+  ctx.fillStyle = '#00aaff33';
+  ctx.fillRect(0, FOOTER_Y, W, 1);
+
+  const PFP = 48, pfpMid = FOOTER_Y + FOOTER_H / 2;
+  ctx.fillStyle = '#000c18';
+  ctx.beginPath();
+  ctx.arc(PAD + PFP / 2, pfpMid, PFP / 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 2; ctx.stroke();
+
+  ctx.fillStyle = '#00aaff';
+  ctx.font = 'bold 22px Courier New, monospace';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('@' + (article.user?.username || 'unknown'), PAD + PFP + 10, pfpMid - 12);
+  ctx.fillStyle = '#ff2d78';
+  ctx.font = '18px Courier New, monospace';
+  const tags = (article.tag_list || []).slice(0, 3).map(t => '#' + t).join('  ');
+  ctx.fillText(tags, PAD + PFP + 10, pfpMid + 14);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#ff2d78';
+  ctx.font = 'bold 28px Courier New, monospace';
+  ctx.fillText(`♥ ${article.public_reactions_count ?? 0}`, W - PAD - 220, pfpMid);
+  ctx.fillStyle = '#00ffe1';
+  ctx.font = '22px Courier New, monospace';
+  ctx.fillText(`⏱ ${article.reading_time_minutes ?? '?'} min`, W - PAD, pfpMid);
+  ctx.textAlign = 'left';
+
+  const pfpSrc = article.user?.profile_image_90 || article.user?.profile_image;
+  if (pfpSrc) {
+    const pfp = new window.Image();
+    pfp.crossOrigin = 'anonymous';
+    pfp.onload = () => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(PAD + PFP / 2, pfpMid, PFP / 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(pfp, PAD, FOOTER_Y + (FOOTER_H - PFP) / 2, PFP, PFP);
+      ctx.restore();
+      tex.needsUpdate = true;
+    };
+    pfp.onerror = () => {};
+    pfp.src = pfpSrc;
+  }
+
+  return tex;
+}
+
+// Build a roadside billboard mesh (post + panel)
+function createRoadsideBillboard() {
+  const group = new THREE.Group();
+  const postMat  = new THREE.MeshLambertMaterial({ color: 0x1a3a5c });
+  const frameMat = new THREE.MeshBasicMaterial({ color: 0x00aaff });
+
+  // Two posts — stop at panel bottom (y=6), spaced apart
+  for (const x of [-2.5, 2.5]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 6, 8), postMat);
+    post.position.set(x, 3, 0);
+    group.add(post);
+  }
+
+  // Panel
+  const panel = new THREE.Mesh(
+    new THREE.PlaneGeometry(11, 16.5),
+    new THREE.MeshBasicMaterial({ color: 0x001a33, side: THREE.DoubleSide })
+  );
+  panel.position.y = 14.25;
+  group.add(panel);
+  group.userData.panel = panel;
+
+
+  return group;
+}
+
+// Build an overhead arch billboard
+function createOverheadBillboard() {
+  const group = new THREE.Group();
+  const postMat  = new THREE.MeshLambertMaterial({ color: 0x1a3a5c });
+
+  // Two posts — stop exactly at panel bottom, no intrusion into billboard
+  for (const x of [-(ROAD_WIDTH / 2 + 1), (ROAD_WIDTH / 2 + 1)]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 7.5, 8), postMat);
+    post.position.set(x, 3.75, 0);
+    group.add(post);
+  }
+
+  // Overhead panel — 2:1 landscape ratio to match texture
+  const panel = new THREE.Mesh(
+    new THREE.PlaneGeometry(ROAD_WIDTH + 4, 6),
+    new THREE.MeshBasicMaterial({ color: 0x001a33, side: THREE.DoubleSide })
+  );
+  panel.position.y = 10.5;
+  group.add(panel);
+  group.userData.panel = panel;
+
+
+  return group;
+}
+
+function placeBillboard(bb, pd, side) {
+  const rx =  Math.cos(pd.angle);
+  const rz =  Math.sin(pd.angle);
+  if (bb.type === 'side') {
+    const xOff = side * ROAD_SIDE_OFFSET;
+    bb.mesh.position.set(pd.pos.x + rx * xOff, 0, pd.pos.z + rz * xOff);
+    bb.mesh.rotation.y = -pd.angle;
+  } else {
+    bb.mesh.position.set(pd.pos.x, 0, pd.pos.z);
+    bb.mesh.rotation.y = -pd.angle;
+  }
+}
+
+function assignBillboardArticle(bb) {
+  if (!devArticles.length) return;
+  const art = devArticles[Math.floor(Math.random() * devArticles.length)];
+  const snippets = art._snippets || [''];
+  const snippet  = snippets[Math.floor(Math.random() * snippets.length)] || art.description || '';
+  const tex = bb.type === 'overhead'
+    ? createOverheadBillboardTexture(art, snippet)
+    : createBillboardTexture(art, snippet);
+  bb.mesh.userData.panel.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+  bb.mesh.userData.panel.userData.articleUrl = art.url;
+}
+
+// Initialise billboard pool (hidden until articles load)
+function initBillboards() {
+  for (let i = 0; i < NUM_BILLBOARDS; i++) {
+    const isOverhead = (i % OVERHEAD_EVERY === 0);
+    const type  = isOverhead ? 'overhead' : 'side';
+    const mesh  = isOverhead ? createOverheadBillboard() : createRoadsideBillboard();
+    const side  = (i % 2 === 0) ? 1 : -1;
+    const pathIdx = (i + 2) * BILLBOARD_SPACING;
+    if (pathIdx >= pathData.length) growPath(pathIdx + 4 - pathData.length);
+    placeBillboard({ mesh, type }, pathData[pathIdx], side);
+    mesh.visible = false;
+    scene.add(mesh);
+    billboardPool.push({ mesh, type, pathIdx, side });
+  }
+}
+initBillboards();
+
+// Called after articles load — assign textures + show
+function activateBillboards() {
+  for (const bb of billboardPool) {
+    assignBillboardArticle(bb);
+    bb.mesh.visible = true;
+  }
+}
+
+// ─── Username UI ──────────────────────────────────────────────────────────────
+const overlay     = document.getElementById('overlay');
+const usernameInput = document.getElementById('username-input');
+const startBtn    = document.getElementById('start-btn');
+const statusEl    = document.getElementById('overlay-status');
+const errorEl     = document.getElementById('overlay-error');
+
+async function fetchArticles(username) {
+  statusEl.textContent = 'Fetching articles…';
+  errorEl.textContent  = '';
+  startBtn.disabled    = true;
+
+  try {
+    const res  = await fetch(`https://dev.to/api/articles?username=${encodeURIComponent(username)}&per_page=30`);
+    if (!res.ok) throw new Error(`DEV.to API error: ${res.status}`);
+    const list = await res.json();
+    if (!list.length) throw new Error(`No articles found for @${username}`);
+
+    statusEl.textContent = `Found ${list.length} articles. Loading content…`;
+
+    // Fetch full body for snippets (parallel, up to 10 articles)
+    const toFetch = list.slice(0, 10);
+    await Promise.all(toFetch.map(async art => {
+      try {
+        const r = await fetch(`https://dev.to/api/articles/${art.id}`);
+        const full = await r.json();
+        art._snippets = extractSnippets(full.body_markdown || '');
+      } catch { art._snippets = []; }
+    }));
+    // Remaining articles get description as fallback snippet
+    list.slice(10).forEach(art => { art._snippets = art.description ? [art.description] : ['']; });
+
+    devArticles = list;
+    activateBillboards();
+
+    // Hide overlay
+    overlay.style.transition = 'opacity 0.6s';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.style.display = 'none', 650);
+
+  } catch (err) {
+    errorEl.textContent  = err.message;
+    statusEl.textContent = '';
+    startBtn.disabled    = false;
+  }
+}
+
+startBtn.addEventListener('click', () => {
+  const username = usernameInput.value.trim();
+  if (!username) { errorEl.textContent = 'Please enter a username.'; return; }
+  fetchArticles(username);
+});
+usernameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') startBtn.click();
+});
+
 animate();
