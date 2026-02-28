@@ -290,12 +290,22 @@ function createBuildingStrip() {
 
     for (let row = 0; row < Math.floor(h / 4); row++) {
       for (let col = 0; col < 2; col++) {
+        const winColor = neonColors[Math.floor(Math.random() * 4)];
+        // Front windows
         const win = new THREE.Mesh(
           new THREE.PlaneGeometry(0.8, 0.5),
-          new THREE.MeshBasicMaterial({ color: neonColors[Math.floor(Math.random() * 4)] })
+          new THREE.MeshBasicMaterial({ color: winColor })
         );
         win.position.set((col - 0.5) * 2, -h / 2 + 2 + row * 3.5, d / 2 + 0.08);
         building.add(win);
+        // Back windows
+        const winB = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.8, 0.5),
+          new THREE.MeshBasicMaterial({ color: neonColors[Math.floor(Math.random() * 4)] })
+        );
+        winB.position.set((col - 0.5) * 2, -h / 2 + 2 + row * 3.5, -(d / 2 + 0.08));
+        winB.rotation.y = Math.PI;
+        building.add(winB);
       }
     }
   }
@@ -584,6 +594,21 @@ window.addEventListener('keyup', e => {
   if (e.key === 'v' || e.key === 'V') keys.lookBack = false;
 });
 
+// ─── Gamepad connection tracking ─────────────────────────────────────────────
+let _gamepadIndex = -1;
+window.addEventListener('gamepadconnected',    e => { _gamepadIndex = e.gamepad.index; });
+window.addEventListener('gamepaddisconnected', e => { if (e.gamepad.index === _gamepadIndex) _gamepadIndex = -1; });
+function getGamepad() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  // Use known index if still valid
+  if (_gamepadIndex >= 0 && pads[_gamepadIndex]) return pads[_gamepadIndex];
+  // Auto-discover: scan all slots (also activates the browser's gamepad subsystem)
+  for (let i = 0; i < pads.length; i++) {
+    if (pads[i]) { _gamepadIndex = i; return pads[i]; }
+  }
+  return null;
+}
+
 function getInputs() {
   let steer    = 0;
   let throttle = 0;
@@ -596,7 +621,7 @@ function getInputs() {
   if (keys.down)  brake     = 1;
 
   // Gamepad (analog, layered on top of keyboard — takes max of both)
-  const gp = navigator.getGamepads?.()[0];
+  const gp = getGamepad();
   if (gp) {
     const axis = gp.axes[0];
     if (Math.abs(axis) > 0.1) steer = axis;
@@ -686,7 +711,7 @@ function animate() {
   }
 
   // Gamepad DPad gear shifting (edge-triggered)
-  const gpGear = navigator.getGamepads?.()[0];
+  const gpGear = getGamepad();
   if (gpGear) {
     const dUp   = gpGear.buttons[12]?.pressed ?? false;
     const dDown = gpGear.buttons[13]?.pressed ?? false;
@@ -822,7 +847,7 @@ function animate() {
   skylineMesh.position.z = camera.position.z;
 
   // ── Gamepad: look-back (hold R3) + right-stick orbit ─────────────────────
-  const gpCam = navigator.getGamepads?.()[0];
+  const gpCam = getGamepad();
   const gpLookBack = gpCam?.buttons[11]?.pressed ?? false;
   const lookBack = keys.lookBack || gpLookBack;
   if (gpCam) {
@@ -1229,6 +1254,29 @@ function createOverheadBillboardTexture(article, snippet) {
   return tex;
 }
 
+// Create a PlaneGeometry with horizontally-flipped UVs for back-facing panels
+function createFlippedPlaneGeometry(w, h) {
+  const geo = new THREE.PlaneGeometry(w, h);
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i));
+  uv.needsUpdate = true;
+  return geo;
+}
+
+// Add a back panel sharing the same texture, reads correctly from behind (rotation.y=π already corrects UVs)
+function addBackPanel(group, frontPanel, w, h, baseColor) {
+  const back = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, h),
+    new THREE.MeshBasicMaterial({ color: baseColor })
+  );
+  back.position.copy(frontPanel.position);
+  back.rotation.copy(frontPanel.rotation);
+  back.rotation.y += Math.PI;
+  group.add(back);
+  group.userData.backPanel = back;
+  return back;
+}
+
 // Build a roadside billboard mesh (post + panel)
 function createRoadsideBillboard() {
   const group = new THREE.Group();
@@ -1245,19 +1293,16 @@ function createRoadsideBillboard() {
   group.userData.postRadius  = 0.4;
 
   // Panel
-  const panel = new THREE.Mesh(
-    new THREE.PlaneGeometry(11, 16.5),
-    new THREE.MeshBasicMaterial({ color: 0x001a33, side: THREE.DoubleSide })
-  );
+  const panelGeo = new THREE.PlaneGeometry(11, 16.5);
+  const panel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color: 0x001a33 }));
   panel.position.y = 14.25;
   group.add(panel);
   group.userData.panel = panel;
-
+  addBackPanel(group, panel, 11, 16.5, 0x001a33);
 
   return group;
 }
 
-// Build an overhead arch billboard
 function createOverheadBillboard() {
   const group = new THREE.Group();
   const postMat  = new THREE.MeshLambertMaterial({ color: 0x1a3a5c });
@@ -1272,14 +1317,12 @@ function createOverheadBillboard() {
   group.userData.postRadius  = 0.4;
 
   // Overhead panel — 2:1 landscape ratio to match texture
-  const panel = new THREE.Mesh(
-    new THREE.PlaneGeometry(ROAD_WIDTH + 4, 6),
-    new THREE.MeshBasicMaterial({ color: 0x001a33, side: THREE.DoubleSide })
-  );
+  const panelGeo = new THREE.PlaneGeometry(ROAD_WIDTH + 4, 6);
+  const panel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color: 0x001a33 }));
   panel.position.y = 10.5;
   group.add(panel);
   group.userData.panel = panel;
-
+  addBackPanel(group, panel, ROAD_WIDTH + 4, 6, 0x001a33);
 
   return group;
 }
@@ -1305,8 +1348,11 @@ function assignBillboardArticle(bb) {
   const tex = bb.type === 'overhead'
     ? createOverheadBillboardTexture(art, snippet)
     : createBillboardTexture(art, snippet);
-  bb.mesh.userData.panel.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+  bb.mesh.userData.panel.material = new THREE.MeshBasicMaterial({ map: tex });
   bb.mesh.userData.panel.userData.articleUrl = art.url;
+  if (bb.mesh.userData.backPanel) {
+    bb.mesh.userData.backPanel.material = new THREE.MeshBasicMaterial({ map: tex });
+  }
 }
 
 // Returns true if pathIdx is too close to any building strip
@@ -1466,14 +1512,13 @@ function createStatSignMesh() {
   group.add(post);
   group.userData.postLocalXs = [0];
   group.userData.postRadius  = 0.2;
-    // Panel aspect: 320:220 = 16:11
-  const panel = new THREE.Mesh(
-    new THREE.PlaneGeometry(4, 2.75),
-    new THREE.MeshBasicMaterial({ color: 0x002200, side: THREE.DoubleSide })
-  );
+  // Panel aspect: 320:220 = 16:11
+  const panelGeo = new THREE.PlaneGeometry(4, 2.75);
+  const panel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color: 0x002200 }));
   panel.position.y = 4.5;
   group.add(panel);
   group.userData.panel = panel;
+  addBackPanel(group, panel, 4, 2.75, 0x002200);
   return group;
 }
 
@@ -1490,7 +1535,10 @@ function assignStatSign(bs) {
   const stat = devBadges[_statRoundRobin % devBadges.length];
   _statRoundRobin++;
   const tex = createStatSignTexture(stat);
-  bs.mesh.userData.panel.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+  bs.mesh.userData.panel.material = new THREE.MeshBasicMaterial({ map: tex });
+  if (bs.mesh.userData.backPanel) {
+    bs.mesh.userData.backPanel.material = new THREE.MeshBasicMaterial({ map: tex });
+  }
 }
 
 function initStatSigns() {
@@ -1567,11 +1615,14 @@ function placeWelcomeScene(username, articleCount) {
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 4.5, 8), postMat);
     post.position.set(px, 2.25, 0); signGroup.add(post);
   }
-  const panel = new THREE.Mesh(
-    new THREE.PlaneGeometry(9.0, 5.35),
-    new THREE.MeshBasicMaterial({ map: createWelcomeSignTexture(username, articleCount), side: THREE.DoubleSide })
-  );
+  const welcomeTex = createWelcomeSignTexture(username, articleCount);
+  const panel = new THREE.Mesh(new THREE.PlaneGeometry(9.0, 5.35), new THREE.MeshBasicMaterial({ map: welcomeTex }));
   panel.position.y = 7.2; signGroup.add(panel);
+  // Back panel with flipped UVs — same texture, reads correctly from behind
+  const backPanel = new THREE.Mesh(new THREE.PlaneGeometry(9.0, 5.35), new THREE.MeshBasicMaterial({ map: welcomeTex }));
+  backPanel.position.y = 7.2;
+  backPanel.rotation.y = Math.PI;
+  signGroup.add(backPanel);
   const sideOff = ROAD_WIDTH / 2 + 5.5;
   signGroup.userData.postLocalXs = [-2.0, 2.0];
   signGroup.userData.postRadius  = 0.2;
