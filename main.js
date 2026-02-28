@@ -633,7 +633,7 @@ updateGearHUD();
 
 const CAR = {
   maxSpeed:     0.42,
-  acceleration: 0.0008, // slow build-up
+  acceleration: 0.0006, // slow build-up, tapers at high speed
   brakeForce:   0.0015, // gentle, realistic deceleration
   friction:     0.00005, // barely any coast-down
   turnSpeed:    0.018,
@@ -657,8 +657,15 @@ function animate() {
     // Park: no movement regardless of input
     carState.speed = 0;
   } else if (carState.gear === 'D') {
-    if (throttle > 0) {
-      carState.speed = Math.min(carState.speed + CAR.acceleration * throttle, CAR.maxSpeed);
+    if (throttle > 0 && brake > 0) {
+      // Throttle + brake together: crawl slowly, fighting both forces
+      const struggle = CAR.maxSpeed * 0.08;
+      carState.speed += (struggle - carState.speed) * 0.04;
+    } else if (throttle > 0) {
+      // Acceleration tapers off as speed increases (realistic torque curve)
+      const speedRatio = carState.speed / CAR.maxSpeed;
+      const effectiveAccel = CAR.acceleration * throttle * (1 - speedRatio * 0.85);
+      carState.speed = Math.min(carState.speed + effectiveAccel, CAR.maxSpeed);
     } else if (brake > 0) {
       carState.speed = Math.max(carState.speed - CAR.brakeForce * brake, 0);
     } else {
