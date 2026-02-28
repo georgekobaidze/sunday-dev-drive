@@ -506,8 +506,17 @@ const keys = { left: false, right: false, up: false, down: false };
 const camState = { mode: 'chase' }; // chase | hood | side | orbit
 const orbit = { active: false, phi: Math.PI / 6, theta: Math.PI, radius: 12, lastX: 0, lastY: 0 };
 
+function initOrbitFromCamera() {
+  const dx = camera.position.x - car.position.x;
+  const dy = camera.position.y - car.position.y;
+  const dz = camera.position.z - car.position.z;
+  orbit.radius = Math.max(4, Math.sqrt(dx*dx + dy*dy + dz*dz));
+  orbit.phi    = Math.max(0.05, Math.min(Math.PI / 2, Math.acos(dy / orbit.radius)));
+  orbit.theta  = Math.atan2(dx, dz);
+}
+
 renderer.domElement.addEventListener('mousedown', e => {
-  if (e.button === 2) { orbit.active = true; orbit.lastX = e.clientX; orbit.lastY = e.clientY; camState.mode = 'orbit'; updateCamHUD(); }
+  if (e.button === 2) { initOrbitFromCamera(); orbit.active = true; orbit.lastX = e.clientX; orbit.lastY = e.clientY; camState.mode = 'orbit'; updateCamHUD(); }
 });
 renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('mouseup',   e => { if (e.button === 2) orbit.active = false; });
@@ -854,7 +863,7 @@ function animate() {
     const rx = gpCam.axes[2] ?? 0;
     const ry = gpCam.axes[3] ?? 0;
     if (Math.abs(rx) > 0.1 || Math.abs(ry) > 0.1) {
-      if (camState.mode !== 'orbit') { camState.mode = 'orbit'; updateCamHUD(); }
+      if (camState.mode !== 'orbit') { initOrbitFromCamera(); camState.mode = 'orbit'; updateCamHUD(); }
       orbit.theta -= rx * 0.03;
       orbit.phi = Math.max(0.05, Math.min(Math.PI / 2, orbit.phi - ry * 0.03));
     }
