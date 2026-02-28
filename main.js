@@ -271,7 +271,7 @@ function createBuildingStrip() {
     const w = 4 + Math.random() * 6;
     const h = 10 + Math.random() * 28;
     const d = 4 + Math.random() * 6;
-    const xOff = side * (ROAD_WIDTH / 2 + 12 + Math.random() * 8);
+    const xOff = side * (ROAD_WIDTH / 2 + 20 + Math.random() * 6);
 
     const building = new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
@@ -752,7 +752,7 @@ function animate() {
       const fwd = Math.sin(pd.angle) * dx - Math.cos(pd.angle) * dz;
       if (fwd > SEGMENT_LEN * 20) {
         const maxIdx = Math.max(...billboardPool.map(b => b.pathIdx));
-        bb.pathIdx = maxIdx + BILLBOARD_SPACING;
+        bb.pathIdx = safePathIdx(maxIdx + BILLBOARD_SPACING);
         if (bb.pathIdx >= pathData.length) growPath(bb.pathIdx + 4 - pathData.length);
         placeBillboard(bb, pathData[bb.pathIdx], bb.side);
         assignBillboardArticle(bb);
@@ -785,12 +785,12 @@ let devArticles = [];       // fetched articles with snippets
 let billboardPool = [];     // { mesh, postMesh, pathIdx, type }
 let badgeSigns = [];        // { mesh, pathIdx, side }
 let devBadges  = [];        // fetched badge objects
-const BILLBOARD_SPACING = 8;
-const NUM_BILLBOARDS   = 14;
-const ROAD_SIDE_OFFSET = ROAD_WIDTH / 2 + 9;
-const OVERHEAD_EVERY   = 4; // every Nth billboard is overhead
-const BADGE_SPACING    = 5; // path segments between badge signs
-const NUM_BADGE_SIGNS  = 10;
+const BILLBOARD_SPACING = 100; // ~600 units apart
+const NUM_BILLBOARDS   = 5;
+const ROAD_SIDE_OFFSET = ROAD_WIDTH / 2 + 9; // close to road edge
+const OVERHEAD_EVERY   = 4;
+const BADGE_SPACING    = 80; // ~480 units apart
+const NUM_BADGE_SIGNS  = 4;
 
 // Extract text snippets from markdown body — strip markdown, split to paragraphs
 function extractSnippets(markdown = '') {
@@ -1161,6 +1161,17 @@ function assignBillboardArticle(bb) {
   bb.mesh.userData.panel.userData.articleUrl = art.url;
 }
 
+// Returns true if pathIdx is too close to any building strip
+function clashesWithBuilding(idx) {
+  return buildingStrips.some(b => Math.abs(b.pathIdx - idx) <= 2);
+}
+
+// Advance idx until it doesn't clash with a building
+function safePathIdx(idx) {
+  while (clashesWithBuilding(idx)) idx++;
+  return idx;
+}
+
 // Initialise billboard pool (hidden until articles load)
 function initBillboards() {
   for (let i = 0; i < NUM_BILLBOARDS; i++) {
@@ -1168,7 +1179,7 @@ function initBillboards() {
     const type  = isOverhead ? 'overhead' : 'side';
     const mesh  = isOverhead ? createOverheadBillboard() : createRoadsideBillboard();
     const side  = (i % 2 === 0) ? 1 : -1;
-    const pathIdx = (i + 2) * BILLBOARD_SPACING;
+    const pathIdx = safePathIdx((i + 2) * BILLBOARD_SPACING);
     if (pathIdx >= pathData.length) growPath(pathIdx + 4 - pathData.length);
     placeBillboard({ mesh, type }, pathData[pathIdx], side);
     mesh.visible = false;
