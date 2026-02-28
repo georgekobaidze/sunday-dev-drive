@@ -9,8 +9,8 @@ document.body.appendChild(renderer.domElement);
 
 // ─── Scene ───────────────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0d0221);
-scene.fog = new THREE.Fog(0x0d0221, 60, 160);
+scene.background = new THREE.Color(0x000015);
+scene.fog = new THREE.Fog(0x000015, 60, 160);
 
 // ─── Camera ──────────────────────────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 600);
@@ -46,7 +46,7 @@ function createSynthwaveSun() {
 
   // Horizontal stripe cutouts (classic synthwave look)
   ctx.fillStyle = '#08001a';
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 7; i++) {
     const t = i / 10;
     const y = 256 + t * 230;
     const thickness = 4 + t * 14;
@@ -142,7 +142,7 @@ function createRoadTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 256; canvas.height = 512;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#0d0d1a';
+  ctx.fillStyle = '#1a1a1a';
   ctx.fillRect(0, 0, 256, 512);
   // Neon blue edge lines
   ctx.fillStyle = '#00aaff';
