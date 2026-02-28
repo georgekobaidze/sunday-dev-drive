@@ -686,6 +686,29 @@ function animate() {
     }
   }
 
+  // Post collision — stop the car when it hits a sign/billboard support
+  {
+    const CAR_RADIUS = 1.2;
+    for (const grp of signGroups) {
+      if (!grp.userData.postLocalXs) continue;
+      const ry = grp.rotation.y;
+      for (const lx of grp.userData.postLocalXs) {
+        const wx = grp.position.x + lx * Math.cos(ry);
+        const wz = grp.position.z - lx * Math.sin(ry);
+        const dist = Math.sqrt((car.position.x - wx) ** 2 + (car.position.z - wz) ** 2);
+        const minDist = CAR_RADIUS + grp.userData.postRadius;
+        if (dist < minDist && dist > 0.01) {
+          // Push car out and kill speed
+          const nx = (car.position.x - wx) / dist;
+          const nz = (car.position.z - wz) / dist;
+          car.position.x = wx + nx * minDist;
+          car.position.z = wz + nz * minDist;
+          carState.speed = 0;
+        }
+      }
+    }
+  }
+
   // Recycle building strips
   for (const bs of buildingStrips) {
     const pd  = pathData[bs.pathIdx];
@@ -813,6 +836,7 @@ let devArticles = [];       // fetched articles with snippets
 let billboardPool = [];     // { mesh, postMesh, pathIdx, type }
 let badgeSigns = [];        // { mesh, pathIdx, side }
 let devBadges  = [];        // fetched badge objects
+const signGroups = [];      // all sign/billboard groups for post collision
 const BILLBOARD_SPACING = 200; // ~1200 units apart
 const NUM_BILLBOARDS   = 5;
 const ROAD_SIDE_OFFSET = ROAD_WIDTH / 2 + 9; // close to road edge
@@ -1125,6 +1149,8 @@ function createRoadsideBillboard() {
     post.position.set(x, 2.9, 0);
     group.add(post);
   }
+  group.userData.postLocalXs = [-2.5, 2.5];
+  group.userData.postRadius  = 0.4;
 
   // Panel
   const panel = new THREE.Mesh(
@@ -1150,6 +1176,8 @@ function createOverheadBillboard() {
     post.position.set(x, 3.65, 0);
     group.add(post);
   }
+  group.userData.postLocalXs = [-(ROAD_WIDTH / 2 + 1), (ROAD_WIDTH / 2 + 1)];
+  group.userData.postRadius  = 0.4;
 
   // Overhead panel — 2:1 landscape ratio to match texture
   const panel = new THREE.Mesh(
@@ -1213,6 +1241,7 @@ function initBillboards() {
     mesh.visible = false;
     scene.add(mesh);
     billboardPool.push({ mesh, type, pathIdx, side });
+    signGroups.push(mesh);
   }
 }
 initBillboards();
@@ -1343,6 +1372,8 @@ function createStatSignMesh() {
   const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 3.0, 8), postMat);
   post.position.y = 1.5;
   group.add(post);
+  group.userData.postLocalXs = [0];
+  group.userData.postRadius  = 0.2;
     // Panel aspect: 320:220 = 16:11
   const panel = new THREE.Mesh(
     new THREE.PlaneGeometry(4, 2.75),
@@ -1382,6 +1413,7 @@ function initStatSigns() {
     assignStatSign(bs);
     scene.add(mesh);
     badgeSigns.push(bs);
+    signGroups.push(mesh);
   }
 }
 
@@ -1449,9 +1481,12 @@ function placeWelcomeScene(username, articleCount) {
   );
   panel.position.y = 7.2; signGroup.add(panel);
   const sideOff = ROAD_WIDTH / 2 + 5.5;
+  signGroup.userData.postLocalXs = [-2.0, 2.0];
+  signGroup.userData.postRadius  = 0.2;
   signGroup.position.set(pd.pos.x + rx * sideOff, 0, pd.pos.z + rz * sideOff);
   signGroup.rotation.y = -pd.angle;
   scene.add(signGroup);
+  signGroups.push(signGroup);
 }
 
 async function fetchArticles(username) {
