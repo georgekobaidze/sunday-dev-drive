@@ -603,18 +603,11 @@ window.addEventListener('keyup', e => {
   if (e.key === 'v' || e.key === 'V') keys.lookBack = false;
 });
 
-// ─── Gamepad connection tracking ─────────────────────────────────────────────
-let _gamepadIndex = -1;
-window.addEventListener('gamepadconnected',    e => { _gamepadIndex = e.gamepad.index; });
-window.addEventListener('gamepaddisconnected', e => { if (e.gamepad.index === _gamepadIndex) _gamepadIndex = -1; });
+// ─── Gamepad polling(pure scan every frame — event listeners trigger Chrome's
+//     GameInput haptic init which causes Xbox wireless to power off) ──────────
 function getGamepad() {
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-  // Use known index if still valid
-  if (_gamepadIndex >= 0 && pads[_gamepadIndex]) return pads[_gamepadIndex];
-  // Auto-discover: scan all slots (also activates the browser's gamepad subsystem)
-  for (let i = 0; i < pads.length; i++) {
-    if (pads[i]) { _gamepadIndex = i; return pads[i]; }
-  }
+  for (let i = 0; i < pads.length; i++) { if (pads[i]) return pads[i]; }
   return null;
 }
 
