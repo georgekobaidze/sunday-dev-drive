@@ -1017,6 +1017,60 @@ const MOTIVATIONAL_MESSAGES = [
   { title: "Still here? Go write something.", description: "You've been driving long enough. Time to park, open a draft, and share what's in your head." },
 ];
 
+// ─── Motivational messages for users who aren't on DEV Community yet ─────────
+const NON_MEMBER_MESSAGES = [
+  { title: "The road starts with one account.", description: "Every developer you admire on DEV Community started by signing up. That's step one. It takes 30 seconds." },
+  { title: "DEV Community is where developers belong.", description: "Not just another social network. A community built by developers, for developers. Your people are here." },
+  { title: "Your first post is waiting to be written.", description: "You can't publish what you haven't started. Join DEV Community, and the rest follows naturally." },
+  { title: "Knowledge shared is knowledge multiplied.", description: "Join a community where sharing what you know makes the whole field stronger — including you." },
+  { title: "Open, honest, and always welcoming.", description: "DEV Community has no gatekeeping. No experience threshold. Just show up and contribute." },
+  { title: "You've been lurking long enough.", description: "You've read the articles. You've learned from the community. Time to give something back." },
+  { title: "Every expert here was once a newcomer.", description: "The developers with thousands of followers were once at zero, just like you are now." },
+  { title: "Your unique perspective is missing from the feed.", description: "Nobody else has your exact experience, stack, or story. DEV Community is incomplete without it." },
+  { title: "One account opens every door.", description: "Comments, reactions, follows, posts — all of it starts with a single sign-up. Don't overthink it." },
+  { title: "Build in public. Learn in public.", description: "DEV Community is the home for developers who share the journey, not just the destination." },
+  { title: "Your ideas deserve a real audience.", description: "Sign up and your first article could be worth everything to someone who reads it." },
+  { title: "You don't need to be senior to contribute.", description: "Juniors, beginners, career-switchers — DEV Community needs your voice just as much as the veterans'." },
+  { title: "Your GitHub doesn't tell your story. An article does.", description: "Code shows what you built. Writing shows how you think. Join DEV Community and tell the full story." },
+  { title: "The best dev communities are built, not found.", description: "Join DEV Community and help build the community you've always wanted to be part of." },
+  { title: "Writing about tech is a career superpower.", description: "Recruiters, collaborators, and mentors find developers through their words. Start building that trail." },
+  { title: "A comment today, an article tomorrow.", description: "You don't have to publish on day one. Join, read, react, comment — that's how it begins." },
+  { title: "DEV Community is open source at heart.", description: "The platform is built by the community it serves. Join and be part of something bigger than a product." },
+  { title: "Your debugging story could save someone's day.", description: "That bug you just fixed? Document it. It will show up in someone else's search results and rescue them." },
+  { title: "There are developers on DEV Community who need to meet you.", description: "Collaborators, co-founders, mentors, and friends are in this community. They just don't know you yet." },
+  { title: "You already have something to say.", description: "Whatever you worked on this week — that's a post. Sign up and tell us about it." },
+  { title: "Visibility is not vanity. It's a career strategy.", description: "Being known in the developer community opens doors that pure skill alone cannot. Start here." },
+  { title: "DEV Community remembers everything you write.", description: "Your articles don't disappear. They compound. A post written today can generate value for years." },
+  { title: "The feedback here is kind, honest, and useful.", description: "DEV Community is one of the most supportive spaces in tech. Share something imperfect — they'll help you improve it." },
+  { title: "Sign up in the time it takes to read this billboard.", description: "Seriously. By the time you finish this drive you could have an account and a draft post ready." },
+  { title: "The hardest part is always the first step.", description: "Creating the account is the hardest part. After that, the momentum carries you." },
+  { title: "You don't need a blog. You need an audience.", description: "DEV Community gives you a built-in audience of millions of developers. Your own blog can't do that from day one." },
+  { title: "Imposter syndrome doesn't go away by waiting.", description: "It shrinks when you publish. Join, write one post, and watch the community welcome you warmly." },
+  { title: "You could be someone's favourite author.", description: "There's a developer out there who will read your articles regularly and be changed by them. You just haven't met yet." },
+  { title: "Your tutorial would have helped past-you.", description: "Think of the post you wish had existed when you were learning something hard. Write it on DEV Community." },
+  { title: "Learning in public accelerates learning.", description: "Writing about what you're learning forces deeper understanding. The comments will teach you even more." },
+  { title: "The community doesn't judge beginners. It celebrates them.", description: "Beginners who share their journey are some of the most loved contributors on DEV Community. Vulnerability earns trust." },
+  { title: "The internet is big. DEV Community is focused.", description: "Don't shout into the void of a general blog. Write for a developer audience that's already here and waiting." },
+  { title: "Your side project deserves a spotlight.", description: "Built something cool on a weekend? Write it up on DEV Community and give it the audience it deserves." },
+  { title: "One article can change someone's career path.", description: "A well-timed post about a technology, a tool, or a lesson learned can redirect someone's entire trajectory." },
+  { title: "No followers required to start.", description: "No experience threshold. No invitation needed. Just sign up and start contributing from day one." },
+  { title: "Reading is great. Creating is better.", description: "You've consumed enough knowledge. It's time to produce some. DEV Community is the place to start." },
+  { title: "Less noise. More substance.", description: "A place where long-form technical content is valued and celebrated by people who actually care about the craft." },
+  { title: "Your opinions on tech matter.", description: "Framework comparisons, tool reviews, language hot takes — there's always room for a thoughtful developer voice." },
+  { title: "Write once, help thousands.", description: "A single article can be read ten thousand times. That's ten thousand moments where you made someone's day better." },
+  { title: "The community grows because individuals join.", description: "DEV Community exists because people like you decided to show up. Keep the chain going." },
+  { title: "No custom domain needed. Just something worth saying.", description: "No logo, no branding, no setup required. A DEV Community account is all you need to get started." },
+  { title: "Documentation is already writing.", description: "If you've written a README, a comment, or a PR description — you can write a DEV Community article." },
+  { title: "The developer you'll be in 5 years is writing today.", description: "Start the habit now. Future-you will thank present-you for leaving the trail." },
+  { title: "Every programming language has a home here.", description: "Whatever you build with, there are developers on DEV Community who share your stack. Join the conversation." },
+  { title: "Networking doesn't have to be awkward.", description: "An article on DEV Community is the most natural networking tool a developer can have. Let the work speak." },
+  { title: "Your work-in-progress is content.", description: "You don't need a finished project to write. 'Here's what I'm building and what I've learned so far' is a great post." },
+  { title: "This game was built by someone who writes on DEV Community.", description: "And he hasn't regretted that decision for a single second." },
+  { title: "The best time to join was years ago.", description: "The second best time is right now, today, while you're thinking about it." },
+  { title: "You're one click away from a developer community.", description: "The button is right there. The community is right here. All that's missing is you." },
+  { title: "Still driving? You should be signing up.", description: "By the time this road ends, you could have an account, a bio, and your first draft ready to go." },
+];
+
 let billboardPool = [];     // { mesh, postMesh, pathIdx, type }
 let badgeSigns = [];        // { mesh, pathIdx, side }
 let devBadges  = [];        // fetched badge objects
@@ -1142,10 +1196,16 @@ function createBillboardTexture(article, snippet) {
     for (let gx = cx; gx < cx + cw; gx += 24) { ctx.beginPath(); ctx.moveTo(gx, cy); ctx.lineTo(gx, cy + ch); ctx.stroke(); }
     for (let gy = cy; gy < cy + ch; gy += 24) { ctx.beginPath(); ctx.moveTo(cx, gy); ctx.lineTo(cx + cw, gy); ctx.stroke(); }
     // Label
-    ctx.fillStyle = '#00ff88'; ctx.font = 'bold 52px Courier New';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('Click here to', cx + cw / 2, cy + 18);
-    ctx.fillText('start writing!', cx + cw / 2, cy + 82);
+    if (article._joinMode) {
+      ctx.fillStyle = '#00ff88'; ctx.font = 'bold 34px Courier New';
+      ctx.fillText('Click here to join', cx + cw / 2, cy + 18);
+      ctx.fillText('DEV Community!', cx + cw / 2, cy + 62);
+    } else {
+      ctx.fillStyle = '#00ff88'; ctx.font = 'bold 52px Courier New';
+      ctx.fillText('Click here to', cx + cw / 2, cy + 18);
+      ctx.fillText('start writing!', cx + cw / 2, cy + 82);
+    }
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   }
 
@@ -1249,11 +1309,16 @@ function createOverheadBillboardTexture(article, snippet) {
     ctx.strokeStyle = '#00ff8820'; ctx.lineWidth = 1;
     for (let gx = COVER_X; gx < COVER_X + COVER_W; gx += 20) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, COVER_SLOT_H); ctx.stroke(); }
     for (let gy = 0; gy < COVER_SLOT_H; gy += 20) { ctx.beginPath(); ctx.moveTo(COVER_X, gy); ctx.lineTo(COVER_X + COVER_W, gy); ctx.stroke(); }
-    const px2 = COVER_X + COVER_W / 2, py2 = COVER_SLOT_H / 2 - 8;
-    ctx.fillStyle = '#00ff88'; ctx.font = 'bold 42px Courier New';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('Click here to', COVER_X + COVER_W / 2, 12);
-    ctx.fillText('start writing!', COVER_X + COVER_W / 2, 66);
+    if (article._joinMode) {
+      ctx.fillStyle = '#00ff88'; ctx.font = 'bold 28px Courier New';
+      ctx.fillText('Click here to join', COVER_X + COVER_W / 2, 12);
+      ctx.fillText('DEV Community!', COVER_X + COVER_W / 2, 50);
+    } else {
+      ctx.fillStyle = '#00ff88'; ctx.font = 'bold 42px Courier New';
+      ctx.fillText('Click here to', COVER_X + COVER_W / 2, 12);
+      ctx.fillText('start writing!', COVER_X + COVER_W / 2, 66);
+    }
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   }
 
@@ -1657,35 +1722,52 @@ function createWelcomeSignTexture(username, articleCount) {
   ctx.strokeRect(18, 18, W - 36, H - 36);
 
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.fillStyle = '#ccffcc';
-  ctx.font = 'bold 34px Courier New, monospace';
-  ctx.fillText('WELCOME TO THE', W / 2, 38);
 
-  ctx.fillStyle = '#00ff88';
-  ctx.font = 'bold 40px Courier New, monospace';
-  ctx.fillText('DEV DRIVE OF', W / 2, 88);
-
-  ctx.fillStyle = '#ffe44d';
-  ctx.font = 'bold 54px Courier New, monospace';
-  ctx.fillText('@' + username, W / 2, 148);
-
-  ctx.strokeStyle = '#00ff8855'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(40, 222); ctx.lineTo(W - 40, 222); ctx.stroke();
-
-  ctx.fillStyle = '#aaffcc';
-  ctx.font = '26px Courier New, monospace';
-  if (articleCount === 0) {
-    ctx.fillText('★  no articles yet  ★', W / 2, 238);
+  if (articleCount === -1) {
+    // Demo / guest mode — no username
+    ctx.fillStyle = '#ccffcc';
+    ctx.font = 'bold 34px Courier New, monospace';
+    ctx.fillText('WELCOME TO THE', W / 2, 38);
+    ctx.fillStyle = '#00ff88';
+    ctx.font = 'bold 40px Courier New, monospace';
+    ctx.fillText('DEV COMMUNITY', W / 2, 88);
+    ctx.fillStyle = '#ffe44d';
+    ctx.font = 'bold 46px Courier New, monospace';
+    ctx.fillText('TEST DRIVE', W / 2, 148);
+    ctx.strokeStyle = '#00ff8855'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(40, 222); ctx.lineTo(W - 40, 222); ctx.stroke();
+    ctx.fillStyle = '#aaffcc';
+    ctx.font = '24px Courier New, monospace';
+    ctx.fillText('check the billboards to find out why', W / 2, 238);
+    ctx.fillStyle = '#ffffff66';
+    ctx.font = '20px Courier New, monospace';
+    ctx.fillText('you should join DEV Community', W / 2, 276);
   } else {
-    ctx.fillText('★  ' + articleCount + ' articles on DEV.to  ★', W / 2, 238);
-  }
-
-  ctx.fillStyle = '#ffffff66';
-  ctx.font = '20px Courier New, monospace';
-  if (articleCount === 0) {
-    ctx.fillText("let's change that — check the billboards", W / 2, 294);
-  } else {
-    ctx.fillText('buckle up and enjoy the ride', W / 2, 294);
+    ctx.fillStyle = '#ccffcc';
+    ctx.font = 'bold 34px Courier New, monospace';
+    ctx.fillText('WELCOME TO THE', W / 2, 38);
+    ctx.fillStyle = '#00ff88';
+    ctx.font = 'bold 40px Courier New, monospace';
+    ctx.fillText('DEV DRIVE OF', W / 2, 88);
+    ctx.fillStyle = '#ffe44d';
+    ctx.font = 'bold 54px Courier New, monospace';
+    ctx.fillText('@' + username, W / 2, 148);
+    ctx.strokeStyle = '#00ff8855'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(40, 222); ctx.lineTo(W - 40, 222); ctx.stroke();
+    ctx.fillStyle = '#aaffcc';
+    ctx.font = '26px Courier New, monospace';
+    if (articleCount === 0) {
+      ctx.fillText('★  no articles yet  ★', W / 2, 238);
+    } else {
+      ctx.fillText('★  ' + articleCount + ' articles on DEV.to  ★', W / 2, 238);
+    }
+    ctx.fillStyle = '#ffffff66';
+    ctx.font = '20px Courier New, monospace';
+    if (articleCount === 0) {
+      ctx.fillText("let's change that — check the billboards", W / 2, 294);
+    } else {
+      ctx.fillText('buckle up and enjoy the ride', W / 2, 294);
+    }
   }
 
   const tex = new THREE.CanvasTexture(canvas);
@@ -1735,7 +1817,18 @@ async function fetchArticles(username) {
     if (!res.ok) throw new Error(`DEV.to API error: ${res.status}`);
     const list = await res.json();
     if (!list.length) {
-      // No articles — motivational mode: use MOTIVATIONAL_MESSAGES as fake articles
+      // Check if user actually exists before entering motivational mode
+      let userExists = false;
+      try {
+        const chk = await fetch(`https://dev.to/api/users/by_username?url=${encodeURIComponent(username)}`);
+        userExists = chk.ok;
+      } catch { /* network error */ }
+
+      if (!userExists) {
+        throw new Error(`No DEV Community account found for @${username}`);
+      }
+
+      // User exists but has no articles — motivational mode
       statusEl.textContent = `No articles yet for @${username}. Showing some inspiration…`;
       const fakeArticles = MOTIVATIONAL_MESSAGES.map((msg, i) => ({
         id: i,
@@ -1751,7 +1844,6 @@ async function fetchArticles(username) {
       devArticles = fakeArticles;
       activateBillboards();
       placeWelcomeScene(username, 0);
-      // No stat signs for motivational mode
       overlay.style.transition = 'opacity 0.6s';
       overlay.style.opacity = '0';
       setTimeout(() => { overlay.style.display = 'none'; exitBtn.style.display = 'block'; }, 650);
@@ -1812,6 +1904,31 @@ startBtn.addEventListener('click', () => {
 usernameInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') startBtn.click();
 });
+
+function startDemoMode() {
+  currentUsername = 'guest';
+  const fakeArticles = NON_MEMBER_MESSAGES.map((msg, i) => ({
+    id: i,
+    title: msg.title,
+    description: msg.description,
+    _snippets: [msg.description],
+    url: 'https://dev.to/enter',
+    cover_image: null,
+    _joinMode: true,
+    tag_list: ['community', 'beginners', 'motivation'],
+    public_reactions_count: 0,
+    reading_time_minutes: 1,
+  }));
+  devArticles = fakeArticles;
+  activateBillboards();
+  placeWelcomeScene('guest', -1);
+  overlay.style.transition = 'opacity 0.6s';
+  overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.display = 'none'; exitBtn.style.display = 'block'; }, 650);
+}
+
+const testDriveBtn = document.getElementById('test-drive-btn');
+testDriveBtn.addEventListener('click', startDemoMode);
 
 const exitBtn = document.getElementById('exit-btn');
 exitBtn.addEventListener('click', () => {
