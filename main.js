@@ -1649,22 +1649,24 @@ async function fetchArticles(username) {
   startBtn.disabled    = true;
 
   try {
-    const res  = await fetch(`https://dev.to/api/articles?username=${encodeURIComponent(username)}&per_page=30`);
+    const res  = await fetch(`https://dev.to/api/articles?username=${encodeURIComponent(username)}&per_page=1000`);
     if (!res.ok) throw new Error(`DEV.to API error: ${res.status}`);
     const list = await res.json();
     if (!list.length) throw new Error(`No articles found for @${username}`);
 
     statusEl.textContent = `Found ${list.length} articles. Loading content…`;
 
-    // Fetch full body for snippets (parallel, up to 10 articles)
+    // Fetch full body for snippets — sequential with delay to avoid 429
     const toFetch = list.slice(0, 10);
-    await Promise.all(toFetch.map(async art => {
+    for (const art of toFetch) {
       try {
         const r = await fetch(`https://dev.to/api/articles/${art.id}`);
+        if (r.status === 429) { art._snippets = [art.description || '']; continue; }
         const full = await r.json();
         art._snippets = extractSnippets(full.body_markdown || '');
       } catch { art._snippets = []; }
-    }));
+      await new Promise(res => setTimeout(res, 350));
+    }
     // Remaining articles get description as fallback snippet
     list.slice(10).forEach(art => { art._snippets = art.description ? [art.description] : ['']; });
 
