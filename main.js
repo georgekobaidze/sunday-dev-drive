@@ -664,6 +664,28 @@ function animate() {
     camera.position.y += (Math.random() - 0.5) * 0.04;
   }
 
+  // Hard lateral boundary — stop car before reaching buildings
+  {
+    const MAX_LATERAL = ROAD_WIDTH / 2 + 12; // buildings start at ~24 units, cap at 16
+    let nearestIdx = ribbonStartIdx, nearestDist = Infinity;
+    const searchEnd = Math.min(pathData.length - 1, ribbonStartIdx + RIBBON_WINDOW);
+    for (let i = ribbonStartIdx; i < searchEnd; i++) {
+      const d = car.position.distanceTo(pathData[i].pos);
+      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+    }
+    const pd    = pathData[nearestIdx];
+    const dx    = car.position.x - pd.pos.x;
+    const dz    = car.position.z - pd.pos.z;
+    const right = Math.cos(pd.angle) * dx + Math.sin(pd.angle) * dz;
+    if (Math.abs(right) > MAX_LATERAL) {
+      const clamp = Math.sign(right) * MAX_LATERAL;
+      const excess = right - clamp;
+      car.position.x -= Math.cos(pd.angle) * excess;
+      car.position.z -= Math.sin(pd.angle) * excess;
+      carState.speed *= 0.5; // kill speed on impact
+    }
+  }
+
   // Recycle building strips
   for (const bs of buildingStrips) {
     const pd  = pathData[bs.pathIdx];
