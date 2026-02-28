@@ -363,11 +363,6 @@ function createCar() {
   cabin.castShadow = true;
   group.add(cabin);
 
-  // ── Cabin-to-hood filler (closes the gap between windshield base and hood) ──
-  const cabinFront = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.3, 0.22), bodyMat);
-  cabinFront.position.set(0, 1.05, -0.9);
-  group.add(cabinFront);
-
   const sill = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.14, 1.85), bodyMat);
   sill.position.set(0, 1.005, -0.05);
   group.add(sill);
@@ -477,14 +472,14 @@ function createCar() {
 
   // Steering column — angled up from under dash toward driver
   const col = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.38, 8), dashMat);
-  col.rotation.x = Math.PI / 10;
+  col.rotation.x = Math.PI / 18;
   col.position.set(-0.22, 1.00, -0.62);
   group.add(col);
 
   // Steering wheel (torus) — in front of dash, tilted toward driver
   const wheelRing = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.025, 8, 24), dashMat);
-  wheelRing.position.set(-0.22, 1.18, -0.66);
-  wheelRing.rotation.x = Math.PI / 10;
+  wheelRing.position.set(-0.22, 1.13, -0.66);
+  wheelRing.rotation.x = Math.PI / 18;
   group.add(wheelRing);
 
   // Car-style steering wheel: center hub + 3 spokes (top + two lower)
