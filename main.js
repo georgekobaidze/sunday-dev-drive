@@ -562,11 +562,71 @@ renderer.domElement.addEventListener('click', e => {
 
 function updateCamHUD() {
   const labels = { chase: '🎥 Chase', interior: '🪟 Interior', side: '↔ Side', orbit: '🔄 Orbit' };
-  camHUD.textContent = labels[camState.mode] + '  [C/Y] cycle  [RMB] orbit  [V/R3] look back';
+  camHUD.querySelector('#cam-mode-label').textContent = labels[camState.mode];
 }
 const camHUD = document.createElement('div');
-camHUD.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);color:#00aaff;font:13px monospace;opacity:0.7;pointer-events:none;';
+camHUD.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);font:16px monospace;opacity:0.9;pointer-events:none;text-align:center;';
+camHUD.innerHTML = `
+<span id="cam-mode-label" style="color:#00aaff;"></span>
+<span style="color:#ffffff33;margin:0 12px;">|</span>
+<span style="color:#ffe44d;font-weight:bold;background:#ffe44d22;padding:3px 12px;border-radius:3px;border:1px solid #ffe44d66;">[ H ] Show Controls</span>`;
 document.body.appendChild(camHUD);
+
+// ─── Controls panel ───────────────────────────────────────────────────────────
+const controlsPanel = document.createElement('div');
+controlsPanel.style.cssText = `
+  position:fixed;bottom:48px;left:50%;transform:translateX(-50%);
+  background:#000000cc;border:1px solid #00aaff66;border-radius:6px;
+  color:#ccc;font:12px 'Courier New',monospace;padding:16px 24px;
+  pointer-events:none;
+  grid-template-columns:1fr 1fr;gap:6px 40px;
+  white-space:nowrap;
+`;
+const KB = '#00ffe1', GP = '#bf80ff', LBL = '#ffffff88';
+controlsPanel.innerHTML = `
+  <div style="color:${KB};font-weight:bold;margin-bottom:6px;font-size:13px;">⌨ Keyboard</div>
+  <div style="color:${GP};font-weight:bold;margin-bottom:6px;font-size:13px;">🎮 Controller</div>
+
+  <div><span style="color:${LBL};">Accelerate &nbsp;</span>↑</div>
+  <div><span style="color:${LBL};">Accelerate &nbsp;</span>RT</div>
+
+  <div><span style="color:${LBL};">Brake &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>↓</div>
+  <div><span style="color:${LBL};">Brake &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>LT</div>
+
+  <div><span style="color:${LBL};">Steer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>← →</div>
+  <div><span style="color:${LBL};">Steer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>Left Stick</div>
+
+  <div><span style="color:${LBL};">Drive &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>D</div>
+  <div><span style="color:${LBL};">Drive &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>D-Pad ↑</div>
+
+  <div><span style="color:${LBL};">Reverse &nbsp;&nbsp;&nbsp;&nbsp;</span>R</div>
+  <div><span style="color:${LBL};">Reverse &nbsp;&nbsp;&nbsp;&nbsp;</span>D-Pad ↓</div>
+
+  <div><span style="color:${LBL};">Park &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>P</div>
+  <div><span style="color:${LBL};">Park &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>D-Pad ←</div>
+
+  <div><span style="color:${LBL};">Cycle Camera</span>  C</div>
+  <div><span style="color:${LBL};">Cycle Camera</span>  Y / △</div>
+
+  <div><span style="color:${LBL};">Look Back &nbsp;&nbsp;</span>V (hold)</div>
+  <div><span style="color:${LBL};">Look Back &nbsp;&nbsp;</span>R3 (hold)</div>
+
+  <div><span style="color:${LBL};">Orbit Camera</span>  RMB + drag</div>
+  <div><span style="color:${LBL};">Orbit Camera</span>  Right Stick</div>
+
+  <div><span style="color:${LBL};">Open Article</span>  Click billboard</div>
+  <div style="color:#ffffff33;"><span style="color:${LBL};">Open Article</span>  —</div>
+`;
+controlsPanel.style.display = 'none';
+document.body.appendChild(controlsPanel);
+
+let controlsVisible = false;
+document.addEventListener('keydown', e => {
+  if (e.key === 'h' || e.key === 'H') {
+    controlsVisible = !controlsVisible;
+    controlsPanel.style.display = controlsVisible ? 'grid' : 'none';
+  }
+});
 updateCamHUD();
 
 // ─── Gear HUD ─────────────────────────────────────────────────────────────────
