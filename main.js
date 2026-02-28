@@ -385,6 +385,7 @@ function createCar() {
   }
 
   // ── Tail lights (red/orange, facing camera at +Z) ─────────────────────────
+  const tailLights = [];
   for (const x of [-0.72, 0.72]) {
     const tail = new THREE.Mesh(
       new THREE.BoxGeometry(0.38, 0.14, 0.07),
@@ -392,10 +393,13 @@ function createCar() {
     );
     tail.position.set(x, 0.74, 2.22);
     group.add(tail);
+    tailLights.push(tail);
   }
   const tailGlow = new THREE.PointLight(0xff2200, 4, 7);
   tailGlow.position.set(0, 0.74, 2.5);
   group.add(tailGlow);
+  group.userData.tailLights = tailLights;
+  group.userData.tailGlow   = tailGlow;
 
   // ── Headlight meshes (white, at -Z) ──────────────────────────────────────
   for (const x of [-0.68, 0.68]) {
@@ -612,9 +616,9 @@ updateGearHUD();
 
 const CAR = {
   maxSpeed:     0.3,
-  acceleration: 0.002,  // slower build-up
-  brakeForce:   0.004,  // gentler braking
-  friction:     0.002,  // softer coast-down
+  acceleration: 0.0008, // slow build-up
+  brakeForce:   0.0015, // gentle, realistic deceleration
+  friction:     0.001,  // soft coast-down
   turnSpeed:    0.018,
 };
 
@@ -679,6 +683,12 @@ function animate() {
   // Rotate car mesh to match heading + body roll
   car.rotation.y = -carState.angle;
   car.rotation.z =  carState.steer * 0.08; // subtle body roll
+
+  // Brake lights — dim red normally, vivid bright red with strong glow when braking
+  const isBraking = brake > 0 && carState.gear !== 'P';
+  for (const m of car.userData.tailLights) m.material.color.setHex(isBraking ? 0xff2200 : 0x550800);
+  car.userData.tailGlow.intensity = isBraking ? 40 : 3;
+  car.userData.tailGlow.distance  = isBraking ? 14 : 7;
 
   // Keep headlights ahead of car in world space
   const hlOffset = 8;
