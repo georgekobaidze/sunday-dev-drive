@@ -429,7 +429,7 @@ function createCar() {
   }
 
   // ── Interior ──────────────────────────────────────────────────────────────
-  const dashMat  = new THREE.MeshLambertMaterial({ color: 0x0a0010 });
+  const dashMat  = new THREE.MeshLambertMaterial({ color: 0x1a2a3a });
   const neonMat  = new THREE.MeshBasicMaterial({ color: 0x00aaff });
   const neonRedM = new THREE.MeshBasicMaterial({ color: 0xff2d78 });
 
@@ -451,22 +451,26 @@ function createCar() {
     group.add(display);
   }
 
-  // Steering column
-  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.30, 8), dashMat);
-  col.rotation.x = Math.PI / 5;
-  col.position.set(-0.22, 1.05, -0.72);
+  // Steering column — angled up from under dash toward driver
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.38, 8), dashMat);
+  col.rotation.x = Math.PI / 10;
+  col.position.set(-0.22, 1.00, -0.62);
   group.add(col);
 
-  // Steering wheel (torus)
+  // Steering wheel (torus) — in front of dash, tilted toward driver
   const wheelRing = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.025, 8, 24), dashMat);
-  wheelRing.position.set(-0.22, 1.18, -0.84);
-  wheelRing.rotation.x = Math.PI / 5;
+  wheelRing.position.set(-0.22, 1.18, -0.66);
+  wheelRing.rotation.x = Math.PI / 10;
   group.add(wheelRing);
 
-  // Spokes
-  for (const angle of [0, Math.PI * 2 / 3, Math.PI * 4 / 3]) {
-    const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.34, 6), dashMat);
-    spoke.rotation.z = angle;
+  // Car-style steering wheel: center hub + 3 spokes (top + two lower)
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.05, 8), dashMat);
+  hub.rotation.x = Math.PI / 2;
+  wheelRing.add(hub);
+  for (const angle of [Math.PI / 2, -Math.PI / 2 + 0.6, -Math.PI / 2 - 0.6]) {
+    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.15, 0.018), dashMat);
+    spoke.position.set(Math.cos(angle) * 0.085, Math.sin(angle) * 0.085, 0);
+    spoke.rotation.z = angle + Math.PI / 2;
     wheelRing.add(spoke);
   }
 
@@ -710,14 +714,15 @@ function animate() {
 
   // Brake lights — dim red normally, vivid bright red with strong glow when braking
   const isBraking = brake > 0;
+  const isInterior = camState.mode === 'interior';
   for (const m of car.userData.tailLights) m.material.color.setHex(isBraking ? 0xff2200 : 0x550800);
-  car.userData.tailGlow.intensity = isBraking ? 40 : 3;
+  car.userData.tailGlow.intensity = isInterior ? 0 : (isBraking ? 40 : 3);
   car.userData.tailGlow.distance  = isBraking ? 14 : 7;
 
-  // Reverse lights — white flash when in R gear and moving
+  // Reverse lights — white flash when in R gear
   const isReversing = carState.gear === 'R';
   for (const m of car.userData.reverseLights) m.material.color.setHex(isReversing ? 0xffffff : 0x111111);
-  car.userData.reverseGlow.intensity = isReversing ? 6 : 0;
+  car.userData.reverseGlow.intensity = (isReversing && !isInterior) ? 6 : 0;
 
   // Keep headlights ahead of car in world space
   const hlOffset = 8;
