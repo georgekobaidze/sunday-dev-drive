@@ -363,6 +363,20 @@ function createCar() {
   cabin.castShadow = true;
   group.add(cabin);
 
+  // ── Cabin-to-hood filler (closes the gap between windshield base and hood) ──
+  const cabinFront = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.3, 0.22), bodyMat);
+  cabinFront.position.set(0, 1.05, -0.9);
+  group.add(cabinFront);
+
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.14, 1.85), bodyMat);
+  sill.position.set(0, 1.005, -0.05);
+  group.add(sill);
+
+  // ── Rear gap filler (cabin rear z=0.8 → trunk front z=1.1) ───────────────
+  const rearFill = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.14, 0.35), bodyMat);
+  rearFill.position.set(0, 1.005, 0.95);
+  group.add(rearFill);
+
   // ── Windows (dark glass on cabin faces) ──────────────────────────────────
   const glassMat = new THREE.MeshLambertMaterial({ color: 0x050510, transparent: true, opacity: 0.85 });
 
