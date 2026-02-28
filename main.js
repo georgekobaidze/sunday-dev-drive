@@ -760,16 +760,37 @@ function animate() {
     }
   }
 
+  // Recycle badge signs
+  if (devBadges.length) {
+    for (const bs of badgeSigns) {
+      const pd  = pathData[bs.pathIdx];
+      const dx  = car.position.x - pd.pos.x;
+      const dz  = car.position.z - pd.pos.z;
+      const fwd = Math.sin(pd.angle) * dx - Math.cos(pd.angle) * dz;
+      if (fwd > SEGMENT_LEN * 20) {
+        const maxIdx = Math.max(...badgeSigns.map(b => b.pathIdx));
+        bs.pathIdx = maxIdx + BADGE_SPACING;
+        if (bs.pathIdx >= pathData.length) growPath(bs.pathIdx + 4 - pathData.length);
+        placeStatSign(bs, pathData[bs.pathIdx]);
+        assignStatSign(bs);
+      }
+    }
+  }
+
   renderer.render(scene, camera);
 }
 // ─── DEV.to API + Billboard System ───────────────────────────────────────────
 
 let devArticles = [];       // fetched articles with snippets
 let billboardPool = [];     // { mesh, postMesh, pathIdx, type }
+let badgeSigns = [];        // { mesh, pathIdx, side }
+let devBadges  = [];        // fetched badge objects
 const BILLBOARD_SPACING = 8;
 const NUM_BILLBOARDS   = 14;
 const ROAD_SIDE_OFFSET = ROAD_WIDTH / 2 + 9;
 const OVERHEAD_EVERY   = 4; // every Nth billboard is overhead
+const BADGE_SPACING    = 5; // path segments between badge signs
+const NUM_BADGE_SIGNS  = 10;
 
 // Extract text snippets from markdown body — strip markdown, split to paragraphs
 function extractSnippets(markdown = '') {
@@ -1172,6 +1193,161 @@ const startBtn    = document.getElementById('start-btn');
 const statusEl    = document.getElementById('overlay-status');
 const errorEl     = document.getElementById('overlay-error');
 
+// ─── Stat Traffic Signs ───────────────────────────────────────────────────────
+function buildStatCards(userInfo, articles) {
+  const totalReactions = articles.reduce((s, a) => s + (a.public_reactions_count || 0), 0);
+  const totalReadTime  = articles.reduce((s, a) => s + (a.reading_time_minutes || 0), 0);
+  const topArticle     = [...articles].sort((a, b) => (b.public_reactions_count || 0) - (a.public_reactions_count || 0))[0];
+  const tagCount = {};
+  articles.forEach(a => (a.tag_list || []).forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; }));
+  const topTags = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t]) => '#' + t);
+
+  return [
+    { icon: '📝', label: 'Articles', value: String(articles.length) },
+    { icon: '♥', label: 'Total Reactions', value: String(totalReactions) },
+    { icon: '⏱', label: 'Total Read Time', value: totalReadTime + ' min' },
+    { icon: '🏆', label: 'Top Article', value: topArticle?.title || '', coverImage: topArticle?.cover_image || null },
+    { icon: '🏷', label: 'Top Tags', value: topTags.join(' ') },
+    { icon: '📅', label: 'Member Since', value: userInfo.joined_at || '' },
+  ];
+}
+
+function createStatSignTexture(stat) {
+  const W = 320, H = 220;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#002200';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(4, 4, W - 8, H - 8);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  const HEADER_H = 46;
+  const IMG_AREA_Y = HEADER_H + 6;
+  const IMG_AREA_W = W - 24;
+  const IMG_AREA_H = 90; // smaller image slot
+  const TEXT_Y = IMG_AREA_Y + IMG_AREA_H + 6;
+
+  function drawContent() {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#00ff88';
+    ctx.font = 'bold 20px Courier New, monospace';
+    ctx.textBaseline = 'top';
+    ctx.fillText(stat.icon + '  ' + stat.label, W / 2, 14);
+    ctx.fillStyle = '#00ff8866';
+    ctx.fillRect(16, HEADER_H, W - 32, 2);
+
+    if (stat.coverImage) {
+      ctx.fillStyle = '#001100';
+      ctx.fillRect(12, IMG_AREA_Y, IMG_AREA_W, IMG_AREA_H);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px Courier New, monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      const words = stat.value.split(' ');
+      let line = '', lines = [];
+      for (const w of words) {
+        const test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width > W - 24) { lines.push(line); line = w; }
+        else line = test;
+      }
+      if (line) lines.push(line);
+      lines.slice(0, 3).forEach((l, i) => ctx.fillText(l, 12, TEXT_Y + i * 19));
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 30px Courier New, monospace';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      const words = stat.value.split(' ');
+      let line = '', lines = [];
+      for (const w of words) {
+        const test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width > W - 28) { lines.push(line); line = w; }
+        else line = test;
+      }
+      if (line) lines.push(line);
+      const totalH = lines.length * 36;
+      const startY = (H + HEADER_H) / 2 - totalH / 2 + 18;
+      lines.forEach((l, i) => ctx.fillText(l, W / 2, startY + i * 36));
+    }
+  }
+
+  if (stat.coverImage) {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      drawContent();
+      const ar = img.width / img.height;
+      let dw = IMG_AREA_W, dh = IMG_AREA_W / ar;
+      if (dh > IMG_AREA_H) { dh = IMG_AREA_H; dw = IMG_AREA_H * ar; }
+      ctx.drawImage(img, 12 + (IMG_AREA_W - dw) / 2, IMG_AREA_Y + (IMG_AREA_H - dh) / 2, dw, dh);
+      tex.needsUpdate = true;
+    };
+    img.onerror = () => { stat.coverImage = null; drawContent(); tex.needsUpdate = true; };
+    img.src = stat.coverImage;
+  } else {
+    drawContent();
+  }
+
+  return tex;
+}
+
+function createStatSignMesh() {
+  const group = new THREE.Group();
+  const postMat = new THREE.MeshLambertMaterial({ color: 0x1a3a5c });
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4, 8), postMat);
+  post.position.y = 2;
+  group.add(post);
+    // Panel aspect: 320:220 = 16:11
+  const panel = new THREE.Mesh(
+    new THREE.PlaneGeometry(4, 2.75),
+    new THREE.MeshBasicMaterial({ color: 0x002200, side: THREE.DoubleSide })
+  );
+  panel.position.y = 4.5;
+  group.add(panel);
+  group.userData.panel = panel;
+  return group;
+}
+
+function placeStatSign(bs, pd) {
+  const rx = Math.cos(pd.angle), rz = Math.sin(pd.angle);
+  const xOff = bs.side * (ROAD_WIDTH / 2 + 3);
+  bs.mesh.position.set(pd.pos.x + rx * xOff, 0, pd.pos.z + rz * xOff);
+  bs.mesh.rotation.y = -pd.angle;
+}
+
+let _statRoundRobin = 0;
+function assignStatSign(bs) {
+  if (!devBadges.length) return;
+  const stat = devBadges[_statRoundRobin % devBadges.length];
+  _statRoundRobin++;
+  const tex = createStatSignTexture(stat);
+  bs.mesh.userData.panel.material = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+}
+
+function initStatSigns() {
+  const billboardMaxIdx = billboardPool.length ? Math.max(...billboardPool.map(b => b.pathIdx)) : 0;
+  const startIdx = billboardMaxIdx + BADGE_SPACING;
+  for (let i = 0; i < NUM_BADGE_SIGNS; i++) {
+    const pathIdx = startIdx + i * BADGE_SPACING;
+    if (pathIdx >= pathData.length) growPath(pathIdx + 2 - pathData.length);
+    const mesh = createStatSignMesh();
+    const side = (i % 2 === 0) ? 1 : -1;
+    const bs = { mesh, pathIdx, side };
+    placeStatSign(bs, pathData[pathIdx]);
+    assignStatSign(bs);
+    scene.add(mesh);
+    badgeSigns.push(bs);
+  }
+}
+
+
 async function fetchArticles(username) {
   statusEl.textContent = 'Fetching articles…';
   errorEl.textContent  = '';
@@ -1199,6 +1375,20 @@ async function fetchArticles(username) {
 
     devArticles = list;
     activateBillboards();
+
+    // Fetch badges and place as traffic signs
+    try {
+      const userRes = await fetch(`https://dev.to/api/users/by_username?url=${encodeURIComponent(username)}`);
+      if (userRes.ok) {
+        const userInfo = await userRes.json();
+        devBadges = userInfo.badge_achievements || [];
+        console.log(`[badges] full user object:`, JSON.stringify(userInfo, null, 2));
+        console.log(`[badges] found ${devBadges.length}`, devBadges);
+        // Build stat cards from user info + articles
+        devBadges = buildStatCards(userInfo, devArticles);
+        initStatSigns();
+      }
+    } catch { /* badges optional */ }
 
     // Hide overlay
     overlay.style.transition = 'opacity 0.6s';
