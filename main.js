@@ -516,12 +516,30 @@ camHUD.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX
 document.body.appendChild(camHUD);
 updateCamHUD();
 
+// ─── Gear HUD ─────────────────────────────────────────────────────────────────
+const gearHUD = document.createElement('div');
+gearHUD.style.cssText = 'position:fixed;top:20px;right:24px;display:flex;gap:10px;pointer-events:none;font:bold 22px Courier New,monospace;';
+document.body.appendChild(gearHUD);
+function updateGearHUD() {
+  gearHUD.innerHTML = ['P','R','D'].map(g => {
+    const active = g === carState.gear;
+    const colors = { D: '#00aaff', R: '#ff2d78', P: '#ffe44d' };
+    const style = active
+      ? `color:${colors[g]};text-shadow:0 0 10px ${colors[g]};border:2px solid ${colors[g]};padding:4px 10px;border-radius:4px;`
+      : `color:#444;border:2px solid #222;padding:4px 10px;border-radius:4px;`;
+    return `<span style="${style}">${g}</span>`;
+  }).join('');
+}
+
 window.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft'  || e.key === 'a') keys.left  = true;
-  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
-  if (e.key === 'ArrowUp'    || e.key === 'w') keys.up    = true;
-  if (e.key === 'ArrowDown'  || e.key === 's') keys.down  = true;
+  if (e.key === 'ArrowLeft')  keys.left  = true;
+  if (e.key === 'ArrowRight') keys.right = true;
+  if (e.key === 'ArrowUp')    keys.up    = true;
+  if (e.key === 'ArrowDown')  keys.down  = true;
   if (e.key === 'v' || e.key === 'V') keys.lookBack = true;
+  if (e.key === 'p' || e.key === 'P') { carState.gear = 'P'; carState.speed = 0; updateGearHUD(); }
+  if (e.key === 'd' || e.key === 'D') { carState.gear = 'D'; updateGearHUD(); }
+  if (e.key === 'r' || e.key === 'R') { carState.gear = 'R'; updateGearHUD(); }
   if (e.key === 'c' || e.key === 'C') {
     if (camState.mode === 'orbit') {
       camState.mode = 'chase';
@@ -534,10 +552,10 @@ window.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('keyup', e => {
-  if (e.key === 'ArrowLeft'  || e.key === 'a') keys.left  = false;
-  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
-  if (e.key === 'ArrowUp'    || e.key === 'w') keys.up    = false;
-  if (e.key === 'ArrowDown'  || e.key === 's') keys.down  = false;
+  if (e.key === 'ArrowLeft')  keys.left  = false;
+  if (e.key === 'ArrowRight') keys.right = false;
+  if (e.key === 'ArrowUp')    keys.up    = false;
+  if (e.key === 'ArrowDown')  keys.down  = false;
   if (e.key === 'v' || e.key === 'V') keys.lookBack = false;
 });
 
@@ -581,6 +599,7 @@ const carState = {
   speed:   0,
   angle:   0,
   steer:   0,
+  gear:    'D', // D = drive, R = reverse, P = park
 };
 
 // Start 30 segments in so the road looks established behind the car
@@ -589,6 +608,7 @@ car.position.copy(pathData[CAR_START_IDX].pos);
 carState.angle = pathData[CAR_START_IDX].angle;
 car.rotation.y = -carState.angle;
 lastRebuildCarPos.copy(pathData[CAR_START_IDX].pos);
+updateGearHUD();
 
 const CAR = {
   maxSpeed:     0.3,
@@ -611,20 +631,48 @@ function animate() {
 
   const { steer, throttle, brake } = getInputs();
 
-  // Progressive speed
-  if (throttle > 0) {
-    carState.speed = Math.min(carState.speed + CAR.acceleration * throttle, CAR.maxSpeed);
-  } else if (brake > 0) {
-    carState.speed = Math.max(carState.speed - CAR.brakeForce * brake, 0);
-  } else {
-    carState.speed = Math.max(carState.speed - CAR.friction, 0); // natural slowdown
+  // Gear-based movement
+  if (carState.gear === 'P') {
+    // Park: no movement regardless of input
+    carState.speed = 0;
+  } else if (carState.gear === 'D') {
+    if (throttle > 0) {
+      carState.speed = Math.min(carState.speed + CAR.acceleration * throttle, CAR.maxSpeed);
+    } else if (brake > 0) {
+      carState.speed = Math.max(carState.speed - CAR.brakeForce * brake, 0);
+    } else {
+      carState.speed = Math.max(carState.speed - CAR.friction, 0);
+    }
+  } else if (carState.gear === 'R') {
+    if (throttle > 0) {
+      carState.speed = Math.max(carState.speed - CAR.acceleration * throttle, -CAR.maxSpeed * 0.5);
+    } else if (brake > 0) {
+      carState.speed = Math.min(carState.speed + CAR.brakeForce * brake, 0);
+    } else {
+      carState.speed = Math.min(carState.speed + CAR.friction, 0);
+    }
   }
 
-  // Smooth steering — turn radius scales with speed so it feels natural
-  carState.steer += (steer - carState.steer) * 0.1;
-  carState.angle += carState.steer * carState.speed * CAR.turnSpeed;
+  // Gamepad DPad gear shifting (edge-triggered)
+  const gpGear = navigator.getGamepads?.()[0];
+  if (gpGear) {
+    const dUp   = gpGear.buttons[12]?.pressed ?? false;
+    const dDown = gpGear.buttons[13]?.pressed ?? false;
+    const dLeft = gpGear.buttons[14]?.pressed ?? false;
+    if (dUp   && !animate._prevDUp)   { carState.gear = 'D'; updateGearHUD(); }
+    if (dDown && !animate._prevDDown) { carState.gear = 'R'; updateGearHUD(); }
+    if (dLeft && !animate._prevDLeft) { carState.gear = 'P'; carState.speed = 0; updateGearHUD(); }
+    animate._prevDUp   = dUp;
+    animate._prevDDown = dDown;
+    animate._prevDLeft = dLeft;
+  }
 
-  // Move car in direction it's facing
+  // Smooth steering — steer is inverted in reverse for natural feel
+  const steerDir = carState.gear === 'R' ? -steer : steer;
+  carState.steer += (steerDir - carState.steer) * 0.1;
+  carState.angle += carState.steer * Math.abs(carState.speed) * CAR.turnSpeed;
+
+  // Move car in direction it's facing (speed is signed: positive=forward, negative=reverse)
   car.position.x += Math.sin(carState.angle) * carState.speed;
   car.position.z -= Math.cos(carState.angle) * carState.speed;
 
