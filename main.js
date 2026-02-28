@@ -1691,7 +1691,7 @@ async function fetchArticles(username) {
     // Hide overlay
     overlay.style.transition = 'opacity 0.6s';
     overlay.style.opacity = '0';
-    setTimeout(() => overlay.style.display = 'none', 650);
+    setTimeout(() => { overlay.style.display = 'none'; exitBtn.style.display = 'block'; }, 650);
 
   } catch (err) {
     errorEl.textContent  = err.message;
@@ -1707,6 +1707,11 @@ startBtn.addEventListener('click', () => {
 });
 usernameInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') startBtn.click();
+});
+
+const exitBtn = document.getElementById('exit-btn');
+exitBtn.addEventListener('click', () => {
+  location.href = location.origin + location.pathname;
 });
 
 animate();

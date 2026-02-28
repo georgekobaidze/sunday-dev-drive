@@ -38,6 +38,15 @@
     #overlay button:hover { background: #ff2d7822; box-shadow: 0 0 20px #ff2d78; }
     #overlay-status { color: #00ffe1; font-size: 0.9rem; min-height: 1.2em; letter-spacing: 0.06em; }
     #overlay-error  { color: #ff4444; font-size: 0.85rem; min-height: 1.2em; }
+    #exit-btn {
+      position: fixed; bottom: 20px; left: 20px; z-index: 50;
+      background: transparent; border: 2px solid #ff2d78; color: #ff2d78;
+      padding: 8px 18px; font-size: 0.8rem; font-family: 'Courier New', monospace;
+      border-radius: 4px; cursor: pointer; letter-spacing: 0.1em;
+      text-transform: uppercase; transition: all 0.2s;
+      box-shadow: 0 0 8px #ff2d7855; display: none;
+    }
+    #exit-btn:hover { background: #ff2d7822; box-shadow: 0 0 16px #ff2d78; }
   </style>
 </head>
 <body>
@@ -49,6 +58,8 @@
     <div id="overlay-status"></div>
     <div id="overlay-error"></div>
   </div>
+
+  <button id="exit-btn">EXIT</button>
 
   <script type="importmap">
     {
