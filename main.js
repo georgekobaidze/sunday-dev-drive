@@ -455,7 +455,6 @@ function createCar() {
 }
 
 const car = createCar();
-car.position.set(0, 0, 0);
 scene.add(car);
 
 // Headlights — PointLights on the road ahead of the car
@@ -583,6 +582,13 @@ const carState = {
   angle:   0,
   steer:   0,
 };
+
+// Start 30 segments in so the road looks established behind the car
+const CAR_START_IDX = 30;
+car.position.copy(pathData[CAR_START_IDX].pos);
+carState.angle = pathData[CAR_START_IDX].angle;
+car.rotation.y = -carState.angle;
+lastRebuildCarPos.copy(pathData[CAR_START_IDX].pos);
 
 const CAR = {
   maxSpeed:     0.3,
@@ -785,11 +791,11 @@ let devArticles = [];       // fetched articles with snippets
 let billboardPool = [];     // { mesh, postMesh, pathIdx, type }
 let badgeSigns = [];        // { mesh, pathIdx, side }
 let devBadges  = [];        // fetched badge objects
-const BILLBOARD_SPACING = 100; // ~600 units apart
+const BILLBOARD_SPACING = 200; // ~1200 units apart
 const NUM_BILLBOARDS   = 5;
 const ROAD_SIDE_OFFSET = ROAD_WIDTH / 2 + 9; // close to road edge
 const OVERHEAD_EVERY   = 4;
-const BADGE_SPACING    = 80; // ~480 units apart
+const BADGE_SPACING    = 160; // ~960 units apart
 const NUM_BADGE_SIGNS  = 4;
 
 // Extract text snippets from markdown body — strip markdown, split to paragraphs
@@ -1093,8 +1099,8 @@ function createRoadsideBillboard() {
 
   // Two posts — stop at panel bottom (y=6), spaced apart
   for (const x of [-2.5, 2.5]) {
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 6, 8), postMat);
-    post.position.set(x, 3, 0);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 5.8, 8), postMat);
+    post.position.set(x, 2.9, 0);
     group.add(post);
   }
 
@@ -1118,8 +1124,8 @@ function createOverheadBillboard() {
 
   // Two posts — stop exactly at panel bottom, no intrusion into billboard
   for (const x of [-(ROAD_WIDTH / 2 + 1), (ROAD_WIDTH / 2 + 1)]) {
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 7.5, 8), postMat);
-    post.position.set(x, 3.75, 0);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 7.3, 8), postMat);
+    post.position.set(x, 3.65, 0);
     group.add(post);
   }
 
@@ -1312,8 +1318,8 @@ function createStatSignTexture(stat) {
 function createStatSignMesh() {
   const group = new THREE.Group();
   const postMat = new THREE.MeshLambertMaterial({ color: 0x1a3a5c });
-  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4, 8), postMat);
-  post.position.y = 2;
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 3.0, 8), postMat);
+  post.position.y = 1.5;
   group.add(post);
     // Panel aspect: 320:220 = 16:11
   const panel = new THREE.Mesh(
@@ -1343,8 +1349,7 @@ function assignStatSign(bs) {
 }
 
 function initStatSigns() {
-  const billboardMaxIdx = billboardPool.length ? Math.max(...billboardPool.map(b => b.pathIdx)) : 0;
-  const startIdx = billboardMaxIdx + BADGE_SPACING;
+  const startIdx = CAR_START_IDX + BADGE_SPACING;
   for (let i = 0; i < NUM_BADGE_SIGNS; i++) {
     const pathIdx = startIdx + i * BADGE_SPACING;
     if (pathIdx >= pathData.length) growPath(pathIdx + 2 - pathData.length);
@@ -1358,6 +1363,74 @@ function initStatSigns() {
   }
 }
 
+
+// ─── Welcome Sign ────────────────────────────────────────────────────────────
+function createWelcomeSignTexture(username, articleCount) {
+  const W = 640, H = 380;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#001a00';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#00ff88'; ctx.lineWidth = 8;
+  ctx.strokeRect(6, 6, W - 12, H - 12);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(18, 18, W - 36, H - 36);
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillStyle = '#ccffcc';
+  ctx.font = 'bold 34px Courier New, monospace';
+  ctx.fillText('WELCOME TO THE', W / 2, 38);
+
+  ctx.fillStyle = '#00ff88';
+  ctx.font = 'bold 40px Courier New, monospace';
+  ctx.fillText('DEV DRIVE OF', W / 2, 88);
+
+  ctx.fillStyle = '#ffe44d';
+  ctx.font = 'bold 54px Courier New, monospace';
+  ctx.fillText('@' + username, W / 2, 148);
+
+  ctx.strokeStyle = '#00ff8855'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(40, 222); ctx.lineTo(W - 40, 222); ctx.stroke();
+
+  ctx.fillStyle = '#aaffcc';
+  ctx.font = '26px Courier New, monospace';
+  ctx.fillText('★  ' + articleCount + ' articles on DEV.to  ★', W / 2, 238);
+
+  ctx.fillStyle = '#ffffff66';
+  ctx.font = '20px Courier New, monospace';
+  ctx.fillText('buckle up and enjoy the ride', W / 2, 294);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return tex;
+}
+
+function placeWelcomeScene(username, articleCount) {
+  // Place sign + fox just ahead of the car's start position
+  const signIdx = CAR_START_IDX + 10;
+  const pd      = pathData[signIdx];
+  const rx = Math.cos(pd.angle), rz = Math.sin(pd.angle);
+
+  // ── Sign (right side of road) ──
+  const postMat = new THREE.MeshLambertMaterial({ color: 0x1a4a1a });
+  const signGroup = new THREE.Group();
+  // Posts stop exactly at panel bottom (panel center y=7.2, half-height=2.675 → bottom=4.525)
+  for (const px of [-2.0, 2.0]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 4.5, 8), postMat);
+    post.position.set(px, 2.25, 0); signGroup.add(post);
+  }
+  const panel = new THREE.Mesh(
+    new THREE.PlaneGeometry(9.0, 5.35),
+    new THREE.MeshBasicMaterial({ map: createWelcomeSignTexture(username, articleCount), side: THREE.DoubleSide })
+  );
+  panel.position.y = 7.2; signGroup.add(panel);
+  const sideOff = ROAD_WIDTH / 2 + 5.5;
+  signGroup.position.set(pd.pos.x + rx * sideOff, 0, pd.pos.z + rz * sideOff);
+  signGroup.rotation.y = -pd.angle;
+  scene.add(signGroup);
+}
 
 async function fetchArticles(username) {
   statusEl.textContent = 'Fetching articles…';
@@ -1386,6 +1459,7 @@ async function fetchArticles(username) {
 
     devArticles = list;
     activateBillboards();
+    placeWelcomeScene(username, list.length);
 
     // Fetch badges and place as traffic signs
     try {
