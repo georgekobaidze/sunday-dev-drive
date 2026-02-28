@@ -47,6 +47,16 @@
       box-shadow: 0 0 8px #ff2d7855; display: none;
     }
     #exit-btn:hover { background: #ff2d7822; box-shadow: 0 0 16px #ff2d78; }
+    #share-btn {
+      position: fixed; bottom: 20px; left: 100px; z-index: 50;
+      background: transparent; border: 2px solid #00ffe1; color: #00ffe1;
+      padding: 8px 18px; font-size: 0.8rem; font-family: 'Courier New', monospace;
+      border-radius: 4px; cursor: pointer; letter-spacing: 0.1em;
+      text-transform: uppercase; transition: all 0.2s;
+      box-shadow: 0 0 8px #00ffe155; display: none;
+    }
+    #share-btn:hover { background: #00ffe122; box-shadow: 0 0 16px #00ffe1; }
+    #share-btn.copied { border-color: #00ff88; color: #00ff88; box-shadow: 0 0 16px #00ff88; }
   </style>
 </head>
 <body>
@@ -60,6 +70,7 @@
   </div>
 
   <button id="exit-btn">EXIT</button>
+  <button id="share-btn">SHARE JOURNEY</button>
 
   <script type="importmap">
     {

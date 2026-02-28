@@ -961,6 +961,7 @@ function animate() {
 // ─── DEV.to API + Billboard System ───────────────────────────────────────────
 
 let devArticles = [];       // fetched articles with snippets
+let currentUsername = '';
 let billboardPool = [];     // { mesh, postMesh, pathIdx, type }
 let badgeSigns = [];        // { mesh, pathIdx, side }
 let devBadges  = [];        // fetched badge objects
@@ -1644,6 +1645,7 @@ function placeWelcomeScene(username, articleCount) {
 }
 
 async function fetchArticles(username) {
+  currentUsername = username;
   statusEl.textContent = 'Fetching articles…';
   errorEl.textContent  = '';
   startBtn.disabled    = true;
@@ -1691,7 +1693,7 @@ async function fetchArticles(username) {
     // Hide overlay
     overlay.style.transition = 'opacity 0.6s';
     overlay.style.opacity = '0';
-    setTimeout(() => { overlay.style.display = 'none'; exitBtn.style.display = 'block'; }, 650);
+    setTimeout(() => { overlay.style.display = 'none'; exitBtn.style.display = 'block'; shareBtn.style.display = 'block'; }, 650);
 
   } catch (err) {
     errorEl.textContent  = err.message;
@@ -1713,5 +1715,19 @@ const exitBtn = document.getElementById('exit-btn');
 exitBtn.addEventListener('click', () => {
   location.href = location.origin + location.pathname;
 });
+
+const shareBtn = document.getElementById('share-btn');
+shareBtn.addEventListener('click', () => {
+  const url = `${location.origin}${location.pathname}?user=${encodeURIComponent(currentUsername)}`;
+  navigator.clipboard.writeText(url).then(() => {
+    shareBtn.textContent = 'COPIED!';
+    shareBtn.classList.add('copied');
+    setTimeout(() => { shareBtn.textContent = 'SHARE JOURNEY'; shareBtn.classList.remove('copied'); }, 2000);
+  });
+});
+
+// ─── Auto-fill from URL (?user=username) — user still clicks Start ───────────
+const urlUser = new URLSearchParams(location.search).get('user');
+if (urlUser) usernameInput.value = urlUser;
 
 animate();
