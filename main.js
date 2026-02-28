@@ -962,6 +962,61 @@ function animate() {
 
 let devArticles = [];       // fetched articles with snippets
 let currentUsername = '';
+
+// ─── Motivational messages for users with no articles ─────────────────────────
+const MOTIVATIONAL_MESSAGES = [
+  { title: "Your ideas deserve to exist.", description: "You've thought things no one else has thought. Write them down before the world misses them." },
+  { title: "The best time to start was yesterday.", description: "The second best time is right now. Open a draft. Write one sentence. That's all it takes." },
+  { title: "You already know something others don't.", description: "Every developer has hard-won knowledge. Someone out there is stuck on exactly what you figured out last week." },
+  { title: "Your first article doesn't have to be perfect.", description: "It just has to exist. Perfection is the enemy of published." },
+  { title: "Writing makes you a better engineer.", description: "Explaining a concept forces you to truly understand it. Write to learn, not just to teach." },
+  { title: "Someone is googling your answer right now.", description: "The solution you found at 2am? Write it up. You'll save someone else's night." },
+  { title: "Code fades. Words last.", description: "Repos get archived. Articles get read for years. Your words have a longer half-life than your pull requests." },
+  { title: "You don't need to be an expert.", description: "Write as a beginner for beginners. That perspective is rarer and more valuable than you think." },
+  { title: "Your journey IS the content.", description: "The struggle, the confusion, the breakthrough — that's the story. Document it as you go." },
+  { title: "Every expert was once a beginner who wrote about it.", description: "The developers you admire started by sharing what little they knew. So can you." },
+  { title: "DEV.to is waiting for your voice.", description: "This community is built by people who decided to show up and share. It's your turn." },
+  { title: "What took you hours to learn takes minutes to share.", description: "Compress your suffering into a post so others don't have to suffer the same way." },
+  { title: "Writing builds your reputation.", description: "Every article is a permanent signal of your thinking. Employers, collaborators, and fans are reading." },
+  { title: "You have more to say than you think.", description: "Start with one problem you solved this month. That's a post right there." },
+  { title: "The developer community runs on shared knowledge.", description: "Stack Overflow, GitHub, DEV — it all exists because someone decided to give. Be a giver." },
+  { title: "Writer's block is just a blank file.", description: "Open a new post. Write a bad first draft. The blank page is the only real obstacle." },
+  { title: "Your tutorial would have helped past-you.", description: "Think about the thing you wish existed when you were learning it. Write that thing." },
+  { title: "One article can change someone's career.", description: "The right post at the right moment can unlock a door for a stranger. You have that power." },
+  { title: "Writing is thinking made visible.", description: "The process of writing clarifies ideas you didn't even know were fuzzy. Try it once." },
+  { title: "You're already doing the hard part.", description: "You're coding, building, learning. Writing about it is just narrating what you're already doing." },
+  { title: "The dev world needs more diverse voices.", description: "Your background, your perspective, your way of solving things — that's not replaceable by AI." },
+  { title: "No audience on day one? That's normal.", description: "Every writer with 10,000 readers once had zero. The first post always feels like shouting into a void." },
+  { title: "Ship it like you ship code.", description: "You don't wait for perfect code to deploy. Don't wait for a perfect article to publish either." },
+  { title: "A short article beats no article.", description: "200 words of genuine insight beats 2,000 words of procrastination every single time." },
+  { title: "Teaching is the fastest way to master anything.", description: "The moment you try to explain something, you discover every gap in your understanding." },
+  { title: "Your side project deserves a write-up.", description: "You built something. Now tell the world why, how, and what you learned. That's a post." },
+  { title: "The internet never forgets good content.", description: "A useful article you write today can bring value to readers ten years from now." },
+  { title: "Writing creates serendipity.", description: "The job offer, the collaborator, the opportunity — they often come from someone who read your work." },
+  { title: "You're not competing. You're contributing.", description: "DEV isn't a contest. It's a conversation. You don't need to win. Just join in." },
+  { title: "Your debugging story is worth telling.", description: "That bug that took you three days? Write the post-mortem. It's gold for anyone who hits the same wall." },
+  { title: "Start with a question, not an answer.", description: "\"Why does X work this way?\" is a perfect title. Investigate it out loud in an article." },
+  { title: "The niche you think is too small? It isn't.", description: "There are thousands of developers interested in exactly what you care about. Write for them." },
+  { title: "You've already written it in Slack.", description: "That long explanation you typed in a channel? Clean it up. That's 80% of an article." },
+  { title: "Consistency beats brilliance.", description: "One decent article a month for a year outperforms one brilliant article you're still editing." },
+  { title: "Your README could be an article.", description: "The documentation you wrote for yourself? Someone else needs it too. Publish it." },
+  { title: "Every language, framework, and tool needs more beginner content.", description: "The expert tutorials are everywhere. Beginner-friendly guides are always scarce. Write one." },
+  { title: "Writing forces you to care about clarity.", description: "The clearer your writing, the clearer your thinking. That clarity shows up in your code too." },
+  { title: "You've been meaning to write for months.", description: "That's not a draft problem — it's a decision problem. Decide now." },
+  { title: "Start ugly. Edit later.", description: "A rough draft published beats a perfect draft that stays in your head forever." },
+  { title: "Your mistakes are more valuable than your successes.", description: "Everyone shares wins. The developers who share failures and lessons are the ones we trust." },
+  { title: "What problem are you solving today?", description: "Write it down as you go. You'll have an article by the time you solve it." },
+  { title: "Open source isn't just code.", description: "Knowledge can be open source too. Your articles are pull requests to the collective brain of the internet." },
+  { title: "The developer who writes gets remembered.", description: "Ten developers might build the same thing. The one who writes about it is the one we know." },
+  { title: "You have imposter syndrome? Write about it.", description: "That feeling is universal. An honest post about it will resonate with thousands." },
+  { title: "Writing is a superpower most developers skip.", description: "Communication is the bottleneck in almost every engineering career. Writing trains that muscle." },
+  { title: "Your 'obvious' tip isn't obvious to everyone.", description: "The shortcut you think everyone knows? Someone out there has never heard of it. Tell them." },
+  { title: "A single article is enough to start.", description: "You don't need a series, a brand, or a strategy. You need one post. Just one." },
+  { title: "The road is long. Might as well document it.", description: "You're driving through your learning journey every day. Leave some signs for those who follow." },
+  { title: "This billboard was supposed to be your article.", description: "But you haven't written one yet. You should fix that. Like, today." },
+  { title: "Still here? Go write something.", description: "You've been driving long enough. Time to park, open a draft, and share what's in your head." },
+];
+
 let billboardPool = [];     // { mesh, postMesh, pathIdx, type }
 let badgeSigns = [];        // { mesh, pathIdx, side }
 let devBadges  = [];        // fetched badge objects
@@ -1079,15 +1134,19 @@ function createBillboardTexture(article, snippet) {
     img.onerror = () => {};
     img.src = article.cover_image;
   } else {
-    // No cover: show tag pills as colour blocks
+    // No cover: draw a synthwave "start writing" placeholder
     ctx.fillStyle = '#000c18';
     ctx.fillRect(cx, cy, cw, ch);
-    ctx.fillStyle = '#00aaff44';
-    ctx.font = 'bold 28px Courier New';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(article.title?.slice(0, 30) || '', cx + cw / 2, cy + ch / 2);
-    ctx.textAlign = 'left';
+    // Grid lines
+    ctx.strokeStyle = '#00ff8820'; ctx.lineWidth = 1;
+    for (let gx = cx; gx < cx + cw; gx += 24) { ctx.beginPath(); ctx.moveTo(gx, cy); ctx.lineTo(gx, cy + ch); ctx.stroke(); }
+    for (let gy = cy; gy < cy + ch; gy += 24) { ctx.beginPath(); ctx.moveTo(cx, gy); ctx.lineTo(cx + cw, gy); ctx.stroke(); }
+    // Label
+    ctx.fillStyle = '#00ff88'; ctx.font = 'bold 52px Courier New';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('Click here to', cx + cw / 2, cy + 18);
+    ctx.fillText('start writing!', cx + cw / 2, cy + 82);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   }
 
   // ── SNIPPET TEXT ──────────────────────────────────────────────────────────
@@ -1183,6 +1242,19 @@ function createOverheadBillboardTexture(article, snippet) {
     };
     img.onerror = () => {};
     img.src = article.cover_image;
+  } else {
+    // No cover: synthwave pencil placeholder
+    ctx.fillStyle = '#000c18';
+    ctx.fillRect(COVER_X, 0, COVER_W, COVER_SLOT_H);
+    ctx.strokeStyle = '#00ff8820'; ctx.lineWidth = 1;
+    for (let gx = COVER_X; gx < COVER_X + COVER_W; gx += 20) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, COVER_SLOT_H); ctx.stroke(); }
+    for (let gy = 0; gy < COVER_SLOT_H; gy += 20) { ctx.beginPath(); ctx.moveTo(COVER_X, gy); ctx.lineTo(COVER_X + COVER_W, gy); ctx.stroke(); }
+    const px2 = COVER_X + COVER_W / 2, py2 = COVER_SLOT_H / 2 - 8;
+    ctx.fillStyle = '#00ff88'; ctx.font = 'bold 42px Courier New';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('Click here to', COVER_X + COVER_W / 2, 12);
+    ctx.fillText('start writing!', COVER_X + COVER_W / 2, 66);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   }
 
   // ── TITLE (top-left, next to cover) ──────────────────────────────────────
@@ -1602,11 +1674,19 @@ function createWelcomeSignTexture(username, articleCount) {
 
   ctx.fillStyle = '#aaffcc';
   ctx.font = '26px Courier New, monospace';
-  ctx.fillText('★  ' + articleCount + ' articles on DEV.to  ★', W / 2, 238);
+  if (articleCount === 0) {
+    ctx.fillText('★  no articles yet  ★', W / 2, 238);
+  } else {
+    ctx.fillText('★  ' + articleCount + ' articles on DEV.to  ★', W / 2, 238);
+  }
 
   ctx.fillStyle = '#ffffff66';
   ctx.font = '20px Courier New, monospace';
-  ctx.fillText('buckle up and enjoy the ride', W / 2, 294);
+  if (articleCount === 0) {
+    ctx.fillText("let's change that — check the billboards", W / 2, 294);
+  } else {
+    ctx.fillText('buckle up and enjoy the ride', W / 2, 294);
+  }
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -1654,7 +1734,29 @@ async function fetchArticles(username) {
     const res  = await fetch(`https://dev.to/api/articles?username=${encodeURIComponent(username)}&per_page=1000`);
     if (!res.ok) throw new Error(`DEV.to API error: ${res.status}`);
     const list = await res.json();
-    if (!list.length) throw new Error(`No articles found for @${username}`);
+    if (!list.length) {
+      // No articles — motivational mode: use MOTIVATIONAL_MESSAGES as fake articles
+      statusEl.textContent = `No articles yet for @${username}. Showing some inspiration…`;
+      const fakeArticles = MOTIVATIONAL_MESSAGES.map((msg, i) => ({
+        id: i,
+        title: msg.title,
+        description: msg.description,
+        _snippets: [msg.description],
+        url: 'https://dev.to/new',
+        cover_image: null,
+        tag_list: ['writing', 'beginners', 'motivation'],
+        public_reactions_count: 0,
+        reading_time_minutes: 1,
+      }));
+      devArticles = fakeArticles;
+      activateBillboards();
+      placeWelcomeScene(username, 0);
+      // No stat signs for motivational mode
+      overlay.style.transition = 'opacity 0.6s';
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.style.display = 'none'; exitBtn.style.display = 'block'; }, 650);
+      return;
+    }
 
     statusEl.textContent = `Found ${list.length} articles. Loading content…`;
 
