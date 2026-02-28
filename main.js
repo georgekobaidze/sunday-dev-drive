@@ -401,6 +401,23 @@ function createCar() {
   group.userData.tailLights = tailLights;
   group.userData.tailGlow   = tailGlow;
 
+  // ── Reverse lights (white, inner pair, hidden by default) ────────────────
+  const reverseLights = [];
+  for (const x of [-0.28, 0.28]) {
+    const rev = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.06, 0.07),
+      new THREE.MeshBasicMaterial({ color: 0x111111 })
+    );
+    rev.position.set(x, 0.74, 2.23);
+    group.add(rev);
+    reverseLights.push(rev);
+  }
+  const reverseGlow = new THREE.PointLight(0xffffff, 0, 10);
+  reverseGlow.position.set(0, 0.74, 2.7);
+  group.add(reverseGlow);
+  group.userData.reverseLights = reverseLights;
+  group.userData.reverseGlow   = reverseGlow;
+
   // ── Headlight meshes (white, at -Z) ──────────────────────────────────────
   for (const x of [-0.68, 0.68]) {
     const hl = new THREE.Mesh(
@@ -541,9 +558,9 @@ window.addEventListener('keydown', e => {
   if (e.key === 'ArrowUp')    keys.up    = true;
   if (e.key === 'ArrowDown')  keys.down  = true;
   if (e.key === 'v' || e.key === 'V') keys.lookBack = true;
-  if (e.key === 'p' || e.key === 'P') { carState.gear = 'P'; carState.speed = 0; updateGearHUD(); }
-  if (e.key === 'd' || e.key === 'D') { carState.gear = 'D'; updateGearHUD(); }
-  if (e.key === 'r' || e.key === 'R') { carState.gear = 'R'; updateGearHUD(); }
+  if (e.key === 'p' || e.key === 'P') { if (Math.abs(carState.speed) < 0.01) { carState.gear = 'P'; carState.speed = 0; updateGearHUD(); } }
+  if (e.key === 'd' || e.key === 'D') { if (Math.abs(carState.speed) < 0.01) { carState.gear = 'D'; updateGearHUD(); } }
+  if (e.key === 'r' || e.key === 'R') { if (Math.abs(carState.speed) < 0.01) { carState.gear = 'R'; updateGearHUD(); } }
   if (e.key === 'c' || e.key === 'C') {
     if (camState.mode === 'orbit') {
       camState.mode = 'chase';
@@ -615,10 +632,10 @@ lastRebuildCarPos.copy(pathData[CAR_START_IDX].pos);
 updateGearHUD();
 
 const CAR = {
-  maxSpeed:     0.3,
+  maxSpeed:     0.42,
   acceleration: 0.0008, // slow build-up
   brakeForce:   0.0015, // gentle, realistic deceleration
-  friction:     0.001,  // soft coast-down
+  friction:     0.00005, // barely any coast-down
   turnSpeed:    0.018,
 };
 
@@ -663,9 +680,9 @@ function animate() {
     const dUp   = gpGear.buttons[12]?.pressed ?? false;
     const dDown = gpGear.buttons[13]?.pressed ?? false;
     const dLeft = gpGear.buttons[14]?.pressed ?? false;
-    if (dUp   && !animate._prevDUp)   { carState.gear = 'D'; updateGearHUD(); }
-    if (dDown && !animate._prevDDown) { carState.gear = 'R'; updateGearHUD(); }
-    if (dLeft && !animate._prevDLeft) { carState.gear = 'P'; carState.speed = 0; updateGearHUD(); }
+    if (dUp   && !animate._prevDUp)   { if (Math.abs(carState.speed) < 0.01) { carState.gear = 'D'; updateGearHUD(); } }
+    if (dDown && !animate._prevDDown) { if (Math.abs(carState.speed) < 0.01) { carState.gear = 'R'; updateGearHUD(); } }
+    if (dLeft && !animate._prevDLeft) { if (Math.abs(carState.speed) < 0.01) { carState.gear = 'P'; carState.speed = 0; updateGearHUD(); } }
     animate._prevDUp   = dUp;
     animate._prevDDown = dDown;
     animate._prevDLeft = dLeft;
@@ -685,10 +702,15 @@ function animate() {
   car.rotation.z =  carState.steer * 0.08; // subtle body roll
 
   // Brake lights — dim red normally, vivid bright red with strong glow when braking
-  const isBraking = brake > 0 && carState.gear !== 'P';
+  const isBraking = brake > 0;
   for (const m of car.userData.tailLights) m.material.color.setHex(isBraking ? 0xff2200 : 0x550800);
   car.userData.tailGlow.intensity = isBraking ? 40 : 3;
   car.userData.tailGlow.distance  = isBraking ? 14 : 7;
+
+  // Reverse lights — white flash when in R gear and moving
+  const isReversing = carState.gear === 'R';
+  for (const m of car.userData.reverseLights) m.material.color.setHex(isReversing ? 0xffffff : 0x111111);
+  car.userData.reverseGlow.intensity = isReversing ? 6 : 0;
 
   // Keep headlights ahead of car in world space
   const hlOffset = 8;
