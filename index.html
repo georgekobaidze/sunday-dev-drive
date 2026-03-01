@@ -4,97 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sunday DEV Drive</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; overflow: hidden; font-family: 'Courier New', monospace; }
-    canvas { display: block; }
-
-    #overlay {
-      position: fixed; inset: 0;
-      background: linear-gradient(180deg, #000015cc 0%, #00000ecc 100%),
-                  url('assets/poster.jpg') center/cover no-repeat;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 100; gap: 24px;
-    }
-    #overlay h1 {
-      font-size: 2.8rem; font-weight: bold; letter-spacing: 0.12em;
-      color: #00aaff;
-      text-shadow: 0 0 20px #00aaff, 0 0 40px #0055ff;
-      position: absolute; bottom: 40px; text-align: center;
-    }
-    #overlay p { color: #bf80ff; font-size: 1rem; letter-spacing: 0.08em; }
-    #overlay-status {
-      color: #00ffe1; font-size: 0.9rem; letter-spacing: 0.08em;
-      min-height: 1.4em; text-align: center;
-    }
-    #overlay-status:not(:empty)::before {
-      content: ''; display: inline-block;
-      width: 10px; height: 10px; border-radius: 50%; margin-right: 8px;
-      background: #00ffe1; vertical-align: middle;
-      animation: pulse 1s ease-in-out infinite;
-    }
-    #overlay-error { color: #ff2d78; font-size: 0.85rem; letter-spacing: 0.05em; text-align: center; }
-    #progress-bar-wrap {
-      width: 320px; height: 4px; background: #ffffff18;
-      border-radius: 2px; overflow: hidden; display: none;
-    }
-    #progress-bar {
-      height: 100%; width: 0%; background: #00ffe1;
-      box-shadow: 0 0 8px #00ffe1;
-      transition: width 0.3s ease;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.3; transform: scale(0.6); }
-    }
-    #overlay input {
-      background: #0a0018; border: 2px solid #00aaff; color: #fff;
-      padding: 12px 20px; font-size: 1.1rem; font-family: inherit;
-      border-radius: 4px; outline: none; width: 320px; text-align: center;
-      box-shadow: 0 0 12px #00aaff55;
-    }
-    #overlay input:focus { border-color: #00ffe1; box-shadow: 0 0 18px #00ffe155; }
-    #overlay button {
-      background: #00aaff22; border: 2px solid #00aaff; color: #fff;
-      padding: 12px 0; font-size: 1rem; font-family: inherit;
-      border-radius: 4px; cursor: pointer; letter-spacing: 0.1em;
-      text-transform: uppercase; transition: all 0.2s;
-      box-shadow: 0 0 12px #00aaff66;
-      width: 320px;
-    }
-    #overlay button:hover { background: #00aaff44; box-shadow: 0 0 24px #00aaff; }
-    #overlay #start-btn {
-      background: #00ff8822; border-color: #00ff88;
-      box-shadow: 0 0 12px #00ff8866;
-    }
-    #overlay #start-btn:hover { background: #00ff8844; box-shadow: 0 0 24px #00ff88; }
-    #test-drive-btn {
-      border-color: #00aaff; color: #fff;
-      box-shadow: 0 0 10px #00aaff55; margin-top: -8px;
-      font-size: 0.82rem; letter-spacing: 0.05em;
-      line-height: 1.6; padding: 10px 0;
-    }
-    #test-drive-btn:hover { background: #00aaff22; box-shadow: 0 0 20px #00aaff; }
-    #exit-btn {
-      position: fixed; bottom: 20px; left: 20px; z-index: 50;
-      background: transparent; border: 2px solid #ff2d78; color: #ff2d78;
-      padding: 8px 18px; font-size: 0.8rem; font-family: 'Courier New', monospace;
-      border-radius: 4px; cursor: pointer; letter-spacing: 0.1em;
-      text-transform: uppercase; transition: all 0.2s;
-      box-shadow: 0 0 8px #ff2d7855; display: none;
-    }
-    #exit-btn:hover { background: #ff2d7822; box-shadow: 0 0 16px #ff2d78; }
-    #share-btn {
-      position: fixed; bottom: 20px; left: 100px; z-index: 50;
-      background: transparent; border: 2px solid #00ffe1; color: #00ffe1;
-      padding: 8px 18px; font-size: 0.8rem; font-family: 'Courier New', monospace;
-      border-radius: 4px; cursor: pointer; letter-spacing: 0.1em;
-      text-transform: uppercase; transition: all 0.2s;
-      box-shadow: 0 0 8px #00ffe155; display: none;
-    }
-    #share-btn:hover { background: #00ffe122; box-shadow: 0 0 16px #00ffe1; }
-    #share-btn.copied { border-color: #00ff88; color: #00ff88; box-shadow: 0 0 16px #00ff88; }
-  </style>
+  <link rel="icon" type="image/jpeg" href="assets/favicon.jpg" />
+  <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body>
   <div id="overlay">
@@ -117,6 +28,6 @@
       }
     }
   </script>
-  <script type="module" src="main.js"></script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>
