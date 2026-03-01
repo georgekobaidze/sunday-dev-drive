@@ -82,7 +82,7 @@ Share a link that drops someone right into your article highway.
 | Reverse gear     | R                | D-Pad Down  |
 | Park             | P                | D-Pad Left  |
 | Cycle camera     | C                | Y           |
-| Look back        | V                | B           |
+| Look back        | V                | R3          |
 | Orbit camera     | RMB + Mouse Drag | Right Stick |
 | Toggle help      | H                | —           |
 
