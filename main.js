@@ -579,16 +579,16 @@ document.body.appendChild(camHUD);
 const controlsPanel = document.createElement('div');
 controlsPanel.style.cssText = `
   position:fixed;bottom:48px;left:50%;transform:translateX(-50%);
-  background:#000000cc;border:1px solid #00aaff66;border-radius:6px;
-  color:#ccc;font:12px 'Courier New',monospace;padding:16px 24px;
+  background:#000000dd;border:1px solid #00aaff66;border-radius:8px;
+  color:#ccc;font:15px 'Courier New',monospace;padding:22px 36px;
   pointer-events:none;
-  grid-template-columns:1fr 1fr;gap:6px 40px;
+  grid-template-columns:1fr 1fr;gap:10px 56px;
   white-space:nowrap;
 `;
 const KB = '#00ffe1', GP = '#bf80ff', LBL = '#ffffff88';
 controlsPanel.innerHTML = `
-  <div style="color:${KB};font-weight:bold;margin-bottom:6px;font-size:13px;">⌨ Keyboard</div>
-  <div style="color:${GP};font-weight:bold;margin-bottom:6px;font-size:13px;">🎮 Controller</div>
+  <div style="color:${KB};font-weight:bold;margin-bottom:6px;font-size:16px;">⌨ Keyboard</div>
+  <div style="color:${GP};font-weight:bold;margin-bottom:6px;font-size:16px;">🎮 Controller</div>
 
   <div><span style="color:${LBL};">Accelerate &nbsp;</span>↑</div>
   <div><span style="color:${LBL};">Accelerate &nbsp;</span>RT</div>
