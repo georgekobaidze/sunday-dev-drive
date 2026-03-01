@@ -1,11 +1,12 @@
 # Sunday DEV Drive
 
-> A synthwave driving experience through your DEV Community articles.
+A synthwave driving experience through your DEV Community articles.
+
+## Live Demo
 
 <!-- 🔗 **[Live Demo](TODO)** -->
 
-<!-- TODO: Add a hero screenshot or GIF here -->
-<!-- ![Sunday DEV Drive](assets/screenshots/hero.png) -->
+![Sunday DEV Drive](assets/poster.jpg)
 
 ## About
 
@@ -15,49 +16,59 @@ Built for the [DEV Weekend Challenge: Build for Your Community](https://dev.to/c
 
 ## Features
 
-**Your articles as billboards** — Roadside and overhead signs generated from your real DEV posts, complete with cover images, snippets, and reaction counts.
+### Your Articles as Billboards
 
-**Stat signs along the road** — Green road signs display your profile stats: total articles, reactions, reading time, top post, favorite tags, and join date.
+Roadside and overhead signs generated from your real DEV posts, complete with cover images, snippets, and reaction counts.
 
-**Keyboard & gamepad support** — Drive with arrow keys or plug in a controller. Full analog steering, throttle, and a right-stick orbit camera.
+![Overhead](assets/screenshots/overhead_billboards.jpg)
+![Roadside](assets/screenshots/roadside_banner.jpg)
 
-**Gears & car physics** — Shift between Park, Drive, and Reverse. Acceleration, braking, friction, off-road drag, it all feels right.
+### Stat Signs Along the Road
 
-**Multiple camera modes** — Chase cam, interior cockpit, side view, and free orbit. Press V to look back.
+Green road signs display your profile stats: total articles, reactions, reading time, top post, favorite tags, and join date.
 
-**Synthwave aesthetics** — Neon city skyline, gradient sun, glowing grid ground, and a retro pixel-art car with working headlights and brake lights.
+![Roadside](assets/screenshots/road_signs.jpg)
 
-**Three play modes:**
-- **Your articles** — Enter a username to drive through their posts
-- **Motivational mode** — Users with no articles see encouraging messages with links to start writing
-- **Test drive** — No DEV account? Take a demo spin anyway and let the game will try to convince you to join the DEV Community
+### Keyboard & gamepad support
 
-🔗 **Shareable journeys** — Share a link that drops someone right into your article highway.
+Drive with arrow keys or plug in a controller. Full analog steering, throttle, and a right-stick orbit camera.
 
-## Screenshots
+![Controls](assets/screenshots/controls.jpg)
 
-<!-- TODO: Add 3-4 screenshots here, suggested:
-  1. Start screen with username input
-  2. Driving with article billboards visible
-  3. Overhead billboard close-up / stat signs
-  4. Interior camera view
-  Place images in assets/screenshots/ and reference like:
-  ![Description](assets/screenshots/filename.png)
--->
+### Gears & car physics
+
+Shift between Park, Drive, and Reverse. Acceleration, braking, friction, off-road drag, it all feels right.
+
+### Multiple camera modes
+
+Chase cam, interior cockpit, side view, and free orbit. Press V to look back.
+
+### Synthwave aesthetics
+
+Neon city skyline, gradient sun, glowing grid ground, and a retro pixel-art car with working headlights and brake lights.
+
+### Three play modes
+- **Your articles (for community members):** Enter a username to drive through their posts
+- **Motivational mode (for community members with no articles):** Users with no articles see encouraging messages with links to start writing
+- **Test drive (for non-members of the community):** No DEV account? Take a demo spin anyway and let the game will try to convince you to join the DEV Community
+
+### Shareable journeys
+
+Share a link that drops someone right into your article highway.
 
 ## Controls
 
-| Action           | Keyboard | Gamepad     |
-| ---------------- | -------- | ----------- |
-| Throttle / Brake | ↑ / ↓    | RT / LT     |
-| Steer            | ← →      | Left Stick  |
-| Drive gear       | D        | D-Pad Up    |
-| Reverse gear     | R        | D-Pad Down  |
-| Park             | P        | D-Pad Left  |
-| Cycle camera     | C        | Y           |
-| Look back        | V        | B           |
-| Orbit camera     | —        | Right Stick |
-| Toggle help      | H        | —           |
+| Action           | Keyboard         | Gamepad     |
+| ---------------- | ---------------- | ----------- |
+| Throttle / Brake | ↑ / ↓            | RT / LT     |
+| Steer            | ← →              | Left Stick  |
+| Drive gear       | D                | D-Pad Up    |
+| Reverse gear     | R                | D-Pad Down  |
+| Park             | P                | D-Pad Left  |
+| Cycle camera     | C                | Y           |
+| Look back        | V                | B           |
+| Orbit camera     | RMB + Mouse Drag | Right Stick |
+| Toggle help      | H                | —           |
 
 ## How It Works
 
@@ -69,10 +80,10 @@ Built for the [DEV Weekend Challenge: Build for Your Community](https://dev.to/c
 
 ## Tech Stack
 
-- **Three.js** (r170) — 3D rendering, loaded via import maps from CDN
-- **Vanilla JavaScript** — ES modules, zero build step, zero dependencies
-- **Canvas API** — Dynamic billboard and sign texture generation
-- **DEV API** — Article and user data (public endpoints, no API key)
+- **Three.js** (r170): 3D rendering, loaded via import maps from CDN
+- **Vanilla JavaScript**: ES modules, zero build step, zero dependencies
+- **Canvas API**: Dynamic billboard and sign texture generation
+- **DEV API**: Article and user data (public endpoints, no API key)
 
 ## Project Structure
 
