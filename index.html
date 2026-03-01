@@ -23,6 +23,30 @@
       position: absolute; bottom: 40px; text-align: center;
     }
     #overlay p { color: #bf80ff; font-size: 1rem; letter-spacing: 0.08em; }
+    #overlay-status {
+      color: #00ffe1; font-size: 0.9rem; letter-spacing: 0.08em;
+      min-height: 1.4em; text-align: center;
+    }
+    #overlay-status:not(:empty)::before {
+      content: ''; display: inline-block;
+      width: 10px; height: 10px; border-radius: 50%; margin-right: 8px;
+      background: #00ffe1; vertical-align: middle;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    #overlay-error { color: #ff2d78; font-size: 0.85rem; letter-spacing: 0.05em; text-align: center; }
+    #progress-bar-wrap {
+      width: 320px; height: 4px; background: #ffffff18;
+      border-radius: 2px; overflow: hidden; display: none;
+    }
+    #progress-bar {
+      height: 100%; width: 0%; background: #00ffe1;
+      box-shadow: 0 0 8px #00ffe1;
+      transition: width 0.3s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.3; transform: scale(0.6); }
+    }
     #overlay input {
       background: #0a0018; border: 2px solid #00aaff; color: #fff;
       padding: 12px 20px; font-size: 1.1rem; font-family: inherit;
@@ -79,6 +103,7 @@
     <button id="start-btn">START DRIVING</button>
     <button id="test-drive-btn">No DEV account?<br>Take a test drive →</button>
     <div id="overlay-status"></div>
+    <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
     <div id="overlay-error"></div>
   </div>
 

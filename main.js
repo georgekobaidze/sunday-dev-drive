@@ -1611,6 +1611,14 @@ const usernameInput = document.getElementById('username-input');
 const startBtn    = document.getElementById('start-btn');
 const statusEl    = document.getElementById('overlay-status');
 const errorEl     = document.getElementById('overlay-error');
+const progressWrap = document.getElementById('progress-bar-wrap');
+const progressBar  = document.getElementById('progress-bar');
+
+function setProgress(value) { // 0–1
+  if (value <= 0) { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; return; }
+  progressWrap.style.display = 'block';
+  progressBar.style.width = `${Math.round(value * 100)}%`;
+}
 
 // ─── Stat Traffic Signs ───────────────────────────────────────────────────────
 function buildStatCards(userInfo, articles) {
@@ -1875,6 +1883,7 @@ async function fetchArticles(username) {
   statusEl.textContent = 'Fetching articles…';
   errorEl.textContent  = '';
   startBtn.disabled    = true;
+  setProgress(0);
 
   try {
     const res  = await fetch(`https://dev.to/api/articles?username=${encodeURIComponent(username)}&per_page=1000`);
@@ -1918,7 +1927,10 @@ async function fetchArticles(username) {
 
     // Fetch full body for snippets — sequential with delay to avoid 429
     const toFetch = list.slice(0, 10);
-    for (const art of toFetch) {
+    for (let i = 0; i < toFetch.length; i++) {
+      const art = toFetch[i];
+      statusEl.textContent = 'Loading article content…';
+      setProgress((i + 1) / toFetch.length);
       try {
         const r = await fetch(`https://dev.to/api/articles/${art.id}`);
         if (r.status === 429) { art._snippets = [art.description || '']; continue; }
@@ -1956,6 +1968,7 @@ async function fetchArticles(username) {
   } catch (err) {
     errorEl.textContent  = err.message;
     statusEl.textContent = '';
+    setProgress(0);
     startBtn.disabled    = false;
   }
 }
