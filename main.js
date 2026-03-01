@@ -1265,9 +1265,11 @@ function createBillboardTexture(article, snippet) {
       ctx.fillText('Click here to join', cx + cw / 2, cy + 18);
       ctx.fillText('DEV Community!', cx + cw / 2, cy + 62);
     } else {
-      ctx.fillStyle = '#00ff88'; ctx.font = 'bold 52px Courier New';
-      ctx.fillText('Click here to', cx + cw / 2, cy + 18);
-      ctx.fillText('start writing!', cx + cw / 2, cy + 82);
+      ctx.fillStyle = '#ff2d78aa'; ctx.font = 'bold 56px Courier New';
+      ctx.fillText('404', cx + cw / 2, cy + 36);
+      ctx.fillStyle = '#ffffffaa'; ctx.font = '22px Courier New';
+      ctx.fillText('cover_image: null', cx + cw / 2, cy + 96);
+      ctx.fillText('(the author was too busy)', cx + cw / 2, cy + 130);
     }
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   }
@@ -1378,9 +1380,11 @@ function createOverheadBillboardTexture(article, snippet) {
       ctx.fillText('Click here to join', COVER_X + COVER_W / 2, 12);
       ctx.fillText('DEV Community!', COVER_X + COVER_W / 2, 50);
     } else {
-      ctx.fillStyle = '#00ff88'; ctx.font = 'bold 42px Courier New';
-      ctx.fillText('Click here to', COVER_X + COVER_W / 2, 12);
-      ctx.fillText('start writing!', COVER_X + COVER_W / 2, 66);
+      ctx.fillStyle = '#ff2d78aa'; ctx.font = 'bold 44px Courier New';
+      ctx.fillText('404', COVER_X + COVER_W / 2, 44);
+      ctx.fillStyle = '#ffffffaa'; ctx.font = '18px Courier New';
+      ctx.fillText('cover_image: null', COVER_X + COVER_W / 2, 100);
+      ctx.fillText('(the author was too busy)', COVER_X + COVER_W / 2, 128);
     }
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   }
