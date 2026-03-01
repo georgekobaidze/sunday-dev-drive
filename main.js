@@ -1929,8 +1929,9 @@ async function fetchArticles(username) {
 
     statusEl.textContent = `Found ${list.length} articles. Loading content…`;
 
-    // Fetch full body for snippets — sequential with delay to avoid 429
-    const toFetch = list.slice(0, 10);
+    // Fetch full body for snippets — pick 25 random articles, delay to avoid 429
+    const shuffled = [...list].sort(() => Math.random() - 0.5);
+    const toFetch = shuffled.slice(0, 25);
     for (let i = 0; i < toFetch.length; i++) {
       const art = toFetch[i];
       statusEl.textContent = 'Loading article content…';
@@ -1944,7 +1945,8 @@ async function fetchArticles(username) {
       await new Promise(res => setTimeout(res, 350));
     }
     // Remaining articles get description as fallback snippet
-    list.slice(10).forEach(art => { art._snippets = art.description ? [art.description] : ['']; });
+    const fetchedIds = new Set(toFetch.map(a => a.id));
+    list.filter(a => !fetchedIds.has(a.id)).forEach(art => { art._snippets = art.description ? [art.description] : ['']; });
 
     devArticles = list;
     activateBillboards();
@@ -1956,8 +1958,6 @@ async function fetchArticles(username) {
       if (userRes.ok) {
         const userInfo = await userRes.json();
         devBadges = userInfo.badge_achievements || [];
-        console.log(`[badges] full user object:`, JSON.stringify(userInfo, null, 2));
-        console.log(`[badges] found ${devBadges.length}`, devBadges);
         // Build stat cards from user info + articles
         devBadges = buildStatCards(userInfo, devArticles);
         initStatSigns();
