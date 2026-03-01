@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A synthwave driving experience through your DEV Community articles. Enter your username and cruise through neon-lit billboards of your posts." />
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Sunday DEV Drive" />
+  <meta property="og:description" content="Drive through your DEV Community articles in a synthwave world. Your posts become neon billboards along an endless road." />
+  <meta property="og:image" content="https://sundaydevdrive.pilotronica.com/assets/poster.jpg" />
+  <meta property="og:url" content="https://sundaydevdrive.pilotronica.com" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sunday DEV Drive" />
+  <meta name="twitter:description" content="Drive through your DEV Community articles in a synthwave world." />
+  <meta name="twitter:image" content="https://sundaydevdrive.pilotronica.com/assets/poster.jpg" />
+
+  <title>Sunday DEV Drive</title>
+  <link rel="icon" type="image/jpeg" href="assets/favicon.ico" />
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <div id="overlay">
+    <h1>DRIVE THROUGH YOUR DEV COMMUNITY ARTICLES</h1>
+    <input id="username-input" type="text" placeholder="your dev.to username" autocomplete="off" spellcheck="false" />
+    <button id="start-btn">START DRIVING</button>
+    <button id="test-drive-btn">No DEV account?<br>Take a test drive →</button>
+    <div id="overlay-status"></div>
+    <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+    <div id="overlay-error"></div>
+  </div>
+
+  <button id="exit-btn">EXIT</button>
+  <button id="share-btn">SHARE JOURNEY</button>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
