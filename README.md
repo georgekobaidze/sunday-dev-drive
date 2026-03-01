@@ -1,12 +1,28 @@
 # Sunday DEV Drive
 
-A synthwave driving experience through your DEV Community articles.
+![Sunday DEV Drive](assets/poster.jpg)
+
+<p align="center">
+  <strong>A synthwave driving experience through your DEV Community articles</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/georgekobaidze/sunday-dev-drive/stargazers"><img src="https://img.shields.io/github/stars/georgekobaidze/sunday-dev-drive" alt="Stars"></a>
+  <a href="https://github.com/georgekobaidze/sunday-dev-drive/issues"><img src="https://img.shields.io/github/issues/georgekobaidze/sunday-dev-drive" alt="Issues"></a>
+  <a href="https://github.com/georgekobaidze/sunday-dev-drive/actions"><img src="https://img.shields.io/github/actions/workflow/status/georgekobaidze/sunday-dev-drive/deploy-pages.yml?branch=main" alt="Build Status"></a>
+</p>
+
+<p align="center">
+  <a href="#live-demo">Live Demo</a> •
+  <a href="#features">Features</a> •
+  <a href="#controls">Controls</a> •
+  <a href="#how-it-works">How It Works</a>
+</p>
+
 
 ## Live Demo
 
 <!-- 🔗 **[Live Demo](TODO)** -->
-
-![Sunday DEV Drive](assets/poster.jpg)
 
 ## About
 
@@ -50,7 +66,7 @@ Neon city skyline, gradient sun, glowing grid ground, and a retro pixel-art car 
 ### Three play modes
 - **Your articles (for community members):** Enter a username to drive through their posts
 - **Motivational mode (for community members with no articles):** Users with no articles see encouraging messages with links to start writing
-- **Test drive (for non-members of the community):** No DEV account? Take a demo spin anyway and let the game will try to convince you to join the DEV Community
+- **Test drive (for non-members of the community):** No DEV account? Take a demo spin anyway and let the game convince you to join the DEV Community
 
 ### Shareable journeys
 
@@ -114,8 +130,30 @@ Serve the project root with any static file server:
 npx serve .
 ```
 
+## How to Contribute?
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request targeting the `develop` branch.
+
 No build step, no `npm install` — just open and drive.
 
-## License
+## Author
 
-MIT
+**Giorgi Kobaidze** (Pilotronica)
+
+- GitHub: [@georgekobaidze](https://github.com/georgekobaidze)
+- LinkedIn: [giorgikobaidze](https://www.linkedin.com/in/giorgikobaidze/)
+- Twitter/X: [@georgekobaidze](https://x.com/georgekobaidze)
+- DEV.TO: [georgekobaidze](https://dev.to/georgekobaidze)
+- Discord: [Join the community](https://discord.gg/D7F6wMf6)
+
+---
+
+<p align="center">
+  Made with ☕ and 🏎️ by Giorgi Kobaidze
+</p>
