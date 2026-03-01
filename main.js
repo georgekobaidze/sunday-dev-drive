@@ -559,7 +559,7 @@ renderer.domElement.addEventListener('click', e => {
   const hits = _bbRaycaster.intersectObjects(panels);
   if (hits.length > 0) {
     const url = hits[0].object.userData.articleUrl;
-    if (url) window.open(url, '_blank');
+    if (url) window.open(url, '_blank', 'noopener');
   }
 });
 
@@ -844,7 +844,7 @@ function animate() {
       const d = car.position.distanceTo(pathData[i].pos);
       if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
     }
-    ribbonStartIdx = Math.max(0, nearestIdx - 10);
+    ribbonStartIdx = Math.max(0, nearestIdx - 100);
     rebuildRibbon();
   }
 
@@ -919,6 +919,8 @@ function animate() {
   synthwaveSun.position.set(camera.position.x, 14, camera.position.z - 140);
   skylineMesh.position.x = camera.position.x;
   skylineMesh.position.z = camera.position.z;
+  ground.position.x = car.position.x;
+  ground.position.z = car.position.z;
 
   // ── Gamepad: look-back (hold R3) + right-stick orbit ─────────────────────
   const gpCam = getGamepad();
