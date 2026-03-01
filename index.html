@@ -11,7 +11,8 @@
 
     #overlay {
       position: fixed; inset: 0;
-      background: linear-gradient(180deg, #000015 0%, #00000e 100%);
+      background: linear-gradient(180deg, #000015cc 0%, #00000ecc 100%),
+                  url('assets/poster.jpg') center/cover no-repeat;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 100; gap: 24px;
     }
@@ -19,6 +20,7 @@
       font-size: 2.8rem; font-weight: bold; letter-spacing: 0.12em;
       color: #00aaff;
       text-shadow: 0 0 20px #00aaff, 0 0 40px #0055ff;
+      position: absolute; bottom: 40px; text-align: center;
     }
     #overlay p { color: #bf80ff; font-size: 1rem; letter-spacing: 0.08em; }
     #overlay input {
@@ -49,7 +51,6 @@
       line-height: 1.6; padding: 10px 0;
     }
     #test-drive-btn:hover { background: #00aaff22; box-shadow: 0 0 20px #00aaff; }
-    #overlay-error  { color: #ff4444; font-size: 0.85rem; min-height: 1.2em; }
     #exit-btn {
       position: fixed; bottom: 20px; left: 20px; z-index: 50;
       background: transparent; border: 2px solid #ff2d78; color: #ff2d78;
@@ -73,8 +74,7 @@
 </head>
 <body>
   <div id="overlay">
-    <h1>SUNDAY DEV DRIVE</h1>
-    <p style="color:#00ff88;text-shadow:0 0 10px #00ff88;">Drive through your DEV.to articles</p>
+    <h1>DRIVE THROUGH YOUR DEV COMMUNITY ARTICLES</h1>
     <input id="username-input" type="text" placeholder="your dev.to username" autocomplete="off" spellcheck="false" />
     <button id="start-btn">START DRIVING</button>
     <button id="test-drive-btn">No DEV account?<br>Take a test drive →</button>
