@@ -29,21 +29,25 @@
     }
     #overlay input:focus { border-color: #00ffe1; box-shadow: 0 0 18px #00ffe155; }
     #overlay button {
-      background: transparent; border: 2px solid #ff2d78; color: #ff2d78;
-      padding: 12px 36px; font-size: 1rem; font-family: inherit;
+      background: #00aaff22; border: 2px solid #00aaff; color: #fff;
+      padding: 12px 0; font-size: 1rem; font-family: inherit;
       border-radius: 4px; cursor: pointer; letter-spacing: 0.1em;
       text-transform: uppercase; transition: all 0.2s;
-      box-shadow: 0 0 10px #ff2d7855;
+      box-shadow: 0 0 12px #00aaff66;
+      width: 320px;
     }
-    #overlay button:hover { background: #ff2d7822; box-shadow: 0 0 20px #ff2d78; }
-    #test-drive-btn {
-      background: transparent; border: 2px solid #00ff88; color: #00ff88;
-      padding: 10px 24px; font-size: 0.82rem; font-family: inherit;
-      border-radius: 4px; cursor: pointer; letter-spacing: 0.08em;
-      text-transform: uppercase; transition: all 0.2s;
-      box-shadow: 0 0 8px #00ff8844; margin-top: -8px;
+    #overlay button:hover { background: #00aaff44; box-shadow: 0 0 24px #00aaff; }
+    #overlay #start-btn {
+      background: #00ff8822; border-color: #00ff88;
+      box-shadow: 0 0 12px #00ff8866;
     }
-    #test-drive-btn:hover { background: #00ff8818; box-shadow: 0 0 18px #00ff88; }
+    #overlay #start-btn:hover { background: #00ff8844; box-shadow: 0 0 24px #00ff88; }
+      border-color: #00aaff; color: #fff;
+      box-shadow: 0 0 10px #00aaff55; margin-top: -8px;
+      font-size: 0.82rem; letter-spacing: 0.05em;
+      line-height: 1.6; padding: 10px 0;
+    }
+    #test-drive-btn:hover { background: #00aaff22; box-shadow: 0 0 20px #00aaff; }
     #overlay-error  { color: #ff4444; font-size: 0.85rem; min-height: 1.2em; }
     #exit-btn {
       position: fixed; bottom: 20px; left: 20px; z-index: 50;
@@ -69,10 +73,10 @@
 <body>
   <div id="overlay">
     <h1>SUNDAY DEV DRIVE</h1>
-    <p>Drive through your DEV.to articles</p>
+    <p style="color:#00ff88;text-shadow:0 0 10px #00ff88;">Drive through your DEV.to articles</p>
     <input id="username-input" type="text" placeholder="your dev.to username" autocomplete="off" spellcheck="false" />
     <button id="start-btn">START DRIVING</button>
-    <button id="test-drive-btn">No DEV account? Take a test drive →</button>
+    <button id="test-drive-btn">No DEV account?<br>Take a test drive →</button>
     <div id="overlay-status"></div>
     <div id="overlay-error"></div>
   </div>
