@@ -552,7 +552,10 @@ renderer.domElement.addEventListener('click', e => {
     ((e.clientY - rect.top)  / rect.height) * -2 + 1
   );
   _bbRaycaster.setFromCamera(mouse, camera);
-  const panels = billboardPool.map(bb => bb.mesh.userData.panel).filter(Boolean);
+  const panels = [
+    ...billboardPool.map(bb => bb.mesh.userData.panel),
+    ...billboardPool.map(bb => bb.mesh.userData.backPanel),
+  ].filter(Boolean);
   const hits = _bbRaycaster.intersectObjects(panels);
   if (hits.length > 0) {
     const url = hits[0].object.userData.articleUrl;
@@ -1561,6 +1564,7 @@ function assignBillboardArticle(bb) {
   bb.mesh.userData.panel.userData.articleUrl = art.url;
   if (bb.mesh.userData.backPanel) {
     bb.mesh.userData.backPanel.material = new THREE.MeshBasicMaterial({ map: tex });
+    bb.mesh.userData.backPanel.userData.articleUrl = art.url;
   }
 }
 
