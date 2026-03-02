@@ -189,9 +189,9 @@ car.rotation.y = -carState.angle;
 lastRebuildCarPos.copy(pathData[CAR_START_IDX].pos);
 
 export const CAR = {
-  maxSpeed:     0.42,
-  acceleration: 0.0006,
-  brakeForce:   0.0015,
-  friction:     0.00005,
+  maxSpeed:     1.155,
+  acceleration: 0.004538,
+  brakeForce:   0.011344,
+  friction:     0.000378,
   turnSpeed:    0.018,
 };

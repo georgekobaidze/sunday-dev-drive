@@ -50,9 +50,13 @@ if (urlUser) usernameInput.value = urlUser;
 
 // ─── Animate loop ────────────────────────────────────────────────────────────
 let _prevDUp = false, _prevDDown = false, _prevDLeft = false;
+const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
+
+  const delta = clock.getDelta();
+  const dt = delta * 60;
 
   const { steer, throttle, brake } = getInputs();
 
@@ -62,23 +66,23 @@ function animate() {
   } else if (carState.gear === 'D') {
     if (throttle > 0 && brake > 0) {
       const struggle = CAR.maxSpeed * 0.08;
-      carState.speed += (struggle - carState.speed) * 0.04;
+      carState.speed += (struggle - carState.speed) * (1 - Math.pow(0.96, dt));
     } else if (throttle > 0) {
       const speedRatio = carState.speed / CAR.maxSpeed;
       const effectiveAccel = CAR.acceleration * throttle * (1 - speedRatio * 0.85);
-      carState.speed = Math.min(carState.speed + effectiveAccel, CAR.maxSpeed);
+      carState.speed = Math.min(carState.speed + effectiveAccel * dt, CAR.maxSpeed);
     } else if (brake > 0) {
-      carState.speed = Math.max(carState.speed - CAR.brakeForce * brake, 0);
+      carState.speed = Math.max(carState.speed - CAR.brakeForce * brake * dt, 0);
     } else {
-      carState.speed = Math.max(carState.speed - CAR.friction, 0);
+      carState.speed = Math.max(carState.speed - CAR.friction * dt, 0);
     }
   } else if (carState.gear === 'R') {
     if (throttle > 0) {
-      carState.speed = Math.max(carState.speed - CAR.acceleration * throttle, -CAR.maxSpeed * 0.5);
+      carState.speed = Math.max(carState.speed - CAR.acceleration * throttle * dt, -CAR.maxSpeed * 0.5);
     } else if (brake > 0) {
-      carState.speed = Math.min(carState.speed + CAR.brakeForce * brake, 0);
+      carState.speed = Math.min(carState.speed + CAR.brakeForce * brake * dt, 0);
     } else {
-      carState.speed = Math.min(carState.speed + CAR.friction, 0);
+      carState.speed = Math.min(carState.speed + CAR.friction * dt, 0);
     }
   }
 
@@ -98,12 +102,12 @@ function animate() {
 
   // Smooth steering
   const steerDir = carState.gear === 'R' ? -steer : steer;
-  carState.steer += (steerDir - carState.steer) * 0.1;
-  carState.angle += carState.steer * Math.abs(carState.speed) * CAR.turnSpeed;
+  carState.steer += (steerDir - carState.steer) * (1 - Math.pow(0.9, dt));
+  carState.angle += carState.steer * Math.abs(carState.speed) * CAR.turnSpeed * dt;
 
   // Move car
-  car.position.x += Math.sin(carState.angle) * carState.speed;
-  car.position.z -= Math.cos(carState.angle) * carState.speed;
+  car.position.x += Math.sin(carState.angle) * carState.speed * dt;
+  car.position.z -= Math.cos(carState.angle) * carState.speed * dt;
   car.rotation.y = -carState.angle;
   car.rotation.z =  carState.steer * 0.08;
 
@@ -144,7 +148,7 @@ function animate() {
 
   // Off-road effects
   if (!isOnRoad(car.position)) {
-    carState.speed *= 0.97;
+    carState.speed *= Math.pow(0.97, dt);
     camera.position.x += (Math.random() - 0.5) * 0.06;
     camera.position.y += (Math.random() - 0.5) * 0.04;
   }
@@ -224,8 +228,8 @@ function animate() {
     const ry = gpCam.axes[3] ?? 0;
     if (Math.abs(rx) > 0.1 || Math.abs(ry) > 0.1) {
       if (camState.mode !== 'orbit') { initOrbitFromCamera(); camState.mode = 'orbit'; updateCamHUD(); }
-      orbit.theta -= rx * 0.03;
-      orbit.phi = Math.max(0.05, Math.min(Math.PI / 2, orbit.phi - ry * 0.03));
+      orbit.theta -= rx * 0.03 * dt;
+      orbit.phi = Math.max(0.05, Math.min(Math.PI / 2, orbit.phi - ry * 0.03 * dt));
     }
   }
 
@@ -256,7 +260,7 @@ function animate() {
     const tx = car.position.x + rightX * 10;
     const ty = car.position.y + 3;
     const tz = car.position.z + rightZ * 10;
-    camera.position.lerp(new THREE.Vector3(tx, ty, tz), 0.08);
+    camera.position.lerp(new THREE.Vector3(tx, ty, tz), 1 - Math.pow(1 - 0.2, dt));
     camera.lookAt(car.position.x, car.position.y + 0.8, car.position.z);
 
   } else {
@@ -269,7 +273,7 @@ function animate() {
       car.position.y + camHeight,
       car.position.z - fwdZ * camDist * lookBackMult
     );
-    camera.position.lerp(targetCamPos, 0.08);
+    camera.position.lerp(targetCamPos, 1 - Math.pow(1 - 0.2, dt));
     const lookTarget = new THREE.Vector3(
       car.position.x + fwdX * 4 * lookBackMult,
       car.position.y + 0.5,
