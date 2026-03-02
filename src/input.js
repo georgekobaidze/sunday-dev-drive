@@ -1,5 +1,5 @@
 import { carState } from './car.js';
-import { camState, updateCamHUD, initOrbitFromCamera } from './camera.js';
+import { camState, updateCamHUD } from './camera.js';
 import { updateGearHUD, toggleControls } from './ui.js';
 
 // ─── Keyboard state ──────────────────────────────────────────────────────────
